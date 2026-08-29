@@ -1,6 +1,6 @@
 package com.myvitrine.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.ProductRequest;
 import com.myvitrine.api.dto.response.ProductResponse;
 import com.myvitrine.api.service.ProductService;

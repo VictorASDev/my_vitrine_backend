@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -31,6 +32,9 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserService userService;
 
@@ -44,6 +48,7 @@ class UserServiceTest {
     @Test
     void shouldCreateUserWhenEmailIsNotTaken() {
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
+        when(passwordEncoder.encode("senha1234")).thenReturn("hash-bcrypt-simulado");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UserResponse response = userService.create(request);
@@ -54,7 +59,7 @@ class UserServiceTest {
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
-        assertThat(captor.getValue().getPasswordHash()).isNotEqualTo("senha1234");
+        assertThat(captor.getValue().getPasswordHash()).isEqualTo("hash-bcrypt-simulado");
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.myvitrine.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.SaleRequest;
 import com.myvitrine.api.dto.response.SaleResponse;
 import com.myvitrine.api.exception.ResourceNotFoundException;

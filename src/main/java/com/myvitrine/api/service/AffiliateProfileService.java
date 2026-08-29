@@ -26,9 +26,14 @@ public class AffiliateProfileService {
         this.userService = userService;
     }
 
+    /**
+     * @param userId id do usuario autenticado (extraido do JWT pelo
+     *               Controller) — o perfil criado e sempre o do proprio
+     *               usuario, nunca de terceiros.
+     */
     @Transactional
-    public AffiliateProfileResponse create(AffiliateProfileRequest request) {
-        User user = userService.getUserOrThrow(request.userId());
+    public AffiliateProfileResponse create(UUID userId, AffiliateProfileRequest request) {
+        User user = userService.getUserOrThrow(userId);
         if (user.getProfileType() != ProfileType.AFFILIATE) {
             throw new BusinessRuleException("Usuario " + user.getId() + " nao possui profileType AFFILIATE");
         }
