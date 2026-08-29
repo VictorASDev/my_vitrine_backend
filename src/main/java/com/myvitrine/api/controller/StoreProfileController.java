@@ -2,12 +2,15 @@ package com.myvitrine.api.controller;
 
 import com.myvitrine.api.dto.request.StoreProfileRequest;
 import com.myvitrine.api.dto.response.StoreProfileResponse;
+import com.myvitrine.api.security.CurrentUser;
 import com.myvitrine.api.service.StoreProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,11 +33,12 @@ public class StoreProfileController {
     public StoreProfileController(StoreProfileService storeProfileService) {
         this.storeProfileService = storeProfileService;
     }
-
     @PostMapping
-    @Operation(summary = "Cria o perfil de lojista de um usuario existente")
-    public ResponseEntity<StoreProfileResponse> create(@Valid @RequestBody StoreProfileRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(storeProfileService.create(request));
+    @Operation(summary = "Cria o perfil de lojista do usuario autenticado (requer ROLE_STORE)")
+    public ResponseEntity<StoreProfileResponse> create(@Valid @RequestBody StoreProfileRequest request,
+                                                       @AuthenticationPrincipal Jwt jwt) {
+        StoreProfileResponse response = storeProfileService.create(CurrentUser.id(jwt), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping

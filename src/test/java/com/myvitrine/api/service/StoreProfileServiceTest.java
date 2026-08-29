@@ -38,13 +38,13 @@ class StoreProfileServiceTest {
     void shouldCreateStoreProfileWhenUserIsStoreType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Loja X", "loja@example.com", "hash", ProfileType.STORE, LocalDateTime.now());
-        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", "Descricao");
+        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Descricao");
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
         when(storeProfileRepository.existsById(userId)).thenReturn(false);
         when(storeProfileRepository.save(any(StoreProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StoreProfileResponse response = storeProfileService.create(request);
+        StoreProfileResponse response = storeProfileService.create(userId, request);
 
         assertThat(response.storeName()).isEqualTo("Loja X");
         assertThat(response.userId()).isEqualTo(userId);
@@ -54,11 +54,11 @@ class StoreProfileServiceTest {
     void shouldThrowBusinessRuleWhenUserIsNotStoreType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Afiliado X", "afiliado@example.com", "hash", ProfileType.AFFILIATE, LocalDateTime.now());
-        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", null);
+        StoreProfileRequest request = new StoreProfileRequest("Loja X", null);
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
 
-        assertThatThrownBy(() -> storeProfileService.create(request))
+        assertThatThrownBy(() -> storeProfileService.create(userId, request))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
@@ -66,12 +66,12 @@ class StoreProfileServiceTest {
     void shouldThrowConflictWhenStoreProfileAlreadyExists() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Loja X", "loja@example.com", "hash", ProfileType.STORE, LocalDateTime.now());
-        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", null);
+        StoreProfileRequest request = new StoreProfileRequest("Loja X", null);
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
         when(storeProfileRepository.existsById(userId)).thenReturn(true);
 
-        assertThatThrownBy(() -> storeProfileService.create(request))
+        assertThatThrownBy(() -> storeProfileService.create(userId, request))
                 .isInstanceOf(ResourceConflictException.class);
     }
 }
