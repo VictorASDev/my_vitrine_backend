@@ -37,13 +37,13 @@ class AffiliateProfileServiceTest {
     void shouldCreateAffiliateProfileWhenUserIsAffiliateType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Joao", "joao@example.com", "hash", ProfileType.AFFILIATE, LocalDateTime.now());
-        AffiliateProfileRequest request = new AffiliateProfileRequest("bio", "moda");
+        AffiliateProfileRequest request = new AffiliateProfileRequest(userId, "bio", "moda");
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
         when(affiliateProfileRepository.existsById(userId)).thenReturn(false);
         when(affiliateProfileRepository.save(any(AffiliateProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AffiliateProfileResponse response = affiliateProfileService.create(userId, request);
+        AffiliateProfileResponse response = affiliateProfileService.create(request);
 
         assertThat(response.niche()).isEqualTo("moda");
     }
@@ -52,11 +52,11 @@ class AffiliateProfileServiceTest {
     void shouldThrowBusinessRuleWhenUserIsNotAffiliateType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Loja X", "loja@example.com", "hash", ProfileType.STORE, LocalDateTime.now());
-        AffiliateProfileRequest request = new AffiliateProfileRequest("bio", "moda");
+        AffiliateProfileRequest request = new AffiliateProfileRequest(userId, "bio", "moda");
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
 
-        assertThatThrownBy(() -> affiliateProfileService.create(userId, request))
+        assertThatThrownBy(() -> affiliateProfileService.create(request))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

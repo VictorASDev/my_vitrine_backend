@@ -1,6 +1,6 @@
 package com.myvitrine.api.controller;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.AffiliateLinkRequest;
 import com.myvitrine.api.dto.response.AffiliateLinkResponse;
 import com.myvitrine.api.exception.BusinessRuleException;
