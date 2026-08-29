@@ -1,6 +1,6 @@
 package com.myvitrine.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.HiringRequest;
 import com.myvitrine.api.dto.request.HiringStatusUpdateRequest;
 import com.myvitrine.api.dto.response.HiringResponse;

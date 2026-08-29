@@ -1,6 +1,6 @@
 package com.myvitrine.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.StoreProfileRequest;
 import com.myvitrine.api.dto.response.StoreProfileResponse;
 import com.myvitrine.api.exception.ResourceNotFoundException;
@@ -18,11 +18,20 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * A camada de seguranca (SecurityFilterChain) esta desabilitada aqui
+ * (addFilters=false); a autenticacao para os endpoints que dependem de
+ * @AuthenticationPrincipal Jwt e simulada diretamente com o post-processor
+ * jwt() do spring-security-test, que injeta a Authentication no contexto
+ * independente do filtro real.
+ */
 @WebMvcTest(StoreProfileController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class StoreProfileControllerTest {
@@ -39,12 +48,13 @@ class StoreProfileControllerTest {
     @Test
     void shouldReturnCreatedWhenStoreProfileIsValid() throws Exception {
         UUID userId = UUID.randomUUID();
-        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", "Descricao");
+        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Descricao");
         StoreProfileResponse response = new StoreProfileResponse(userId, "Loja X", "Descricao");
 
-        when(storeProfileService.create(any(StoreProfileRequest.class))).thenReturn(response);
+        when(storeProfileService.create(eq(userId), any(StoreProfileRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/store-profiles")
+                        .with(jwt().jwt(builder -> builder.subject(userId.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -63,11 +73,41 @@ class StoreProfileControllerTest {
 
     @Test
     void shouldReturnBadRequestWhenStoreNameIsBlank() throws Exception {
-        StoreProfileRequest request = new StoreProfileRequest(UUID.randomUUID(), "", null);
+        StoreProfileRequest request = new StoreProfileRequest("", null);
 
         mockMvc.perform(post("/api/store-profiles")
+                        .with(jwt().jwt(builder -> builder.subject(UUID.randomUUID().toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenUpdatingSomeoneElsesProfile() throws Exception {
+        UUID ownerId = UUID.randomUUID();
+        UUID authenticatedId = UUID.randomUUID();
+        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Descricao");
+
+        mockMvc.perform(put("/api/store-profiles/{userId}", ownerId)
+                        .with(jwt().jwt(builder -> builder.subject(authenticatedId.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldAllowUpdatingOwnProfile() throws Exception {
+        UUID userId = UUID.randomUUID();
+        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Nova descricao");
+        StoreProfileResponse response = new StoreProfileResponse(userId, "Loja X", "Nova descricao");
+
+        when(storeProfileService.update(eq(userId), any(StoreProfileRequest.class))).thenReturn(response);
+
+        mockMvc.perform(put("/api/store-profiles/{userId}", userId)
+                        .with(jwt().jwt(builder -> builder.subject(userId.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.description").value("Nova descricao"));
     }
 }

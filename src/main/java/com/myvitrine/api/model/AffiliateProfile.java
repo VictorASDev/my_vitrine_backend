@@ -41,7 +41,6 @@ public class AffiliateProfile {
 
     public AffiliateProfile(User user, String bio, String niche) {
         this.user = user;
-        this.userId = user.getId();
         this.bio = bio;
         this.niche = niche;
     }
