@@ -2,7 +2,6 @@ package com.myvitrine.api.controller;
 
 import com.myvitrine.api.dto.request.UserRequest;
 import com.myvitrine.api.dto.response.UserResponse;
-import com.myvitrine.api.security.CurrentUser;
 import com.myvitrine.api.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -10,8 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,18 +56,13 @@ public class UserController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualiza os dados de um usuario")
-    @ApiResponse(responseCode = "403", description = "Tentativa de editar outro usuario")
-    public ResponseEntity<UserResponse> update(@PathVariable UUID id, @Valid @RequestBody UserRequest request,
-                                               @AuthenticationPrincipal Jwt jwt) {
-        CurrentUser.requireOwner(jwt, id);
+    public ResponseEntity<UserResponse> update(@PathVariable UUID id, @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remove um usuario")
-    @ApiResponse(responseCode = "403", description = "Tentativa de remover outro usuario")
-    public ResponseEntity<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
-        CurrentUser.requireOwner(jwt, id);
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }

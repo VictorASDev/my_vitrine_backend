@@ -6,7 +6,6 @@ import com.myvitrine.api.exception.ResourceConflictException;
 import com.myvitrine.api.exception.ResourceNotFoundException;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,11 +20,9 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -34,7 +31,7 @@ public class UserService {
             throw new ResourceConflictException("Ja existe um usuario cadastrado com o e-mail " + request.email());
         }
         User user = new User(UUID.randomUUID(), request.name(), request.email(),
-               passwordEncoder.encode(request.password()), request.profileType(), LocalDateTime.now());
+                hash(request.password()), request.profileType(), LocalDateTime.now());
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -54,7 +51,7 @@ public class UserService {
         }
         user.setName(request.name());
         user.setEmail(request.email());
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setPasswordHash(hash(request.password()));
         return UserResponse.from(user);
     }
 
@@ -67,5 +64,20 @@ public class UserService {
     User getUserOrThrow(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado: " + id));
+    }
+
+    /**
+     * Placeholder de hashing ate a camada de autenticacao (Spring
+     * Security/OAuth2) ser implementada em uma etapa futura, fora do
+     * escopo desta entrega.
+     */
+    private String hash(String rawPassword) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashed = digest.digest(rawPassword.getBytes());
+            return HexFormat.of().formatHex(hashed);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Algoritmo de hash indisponivel", e);
+        }
     }
 }

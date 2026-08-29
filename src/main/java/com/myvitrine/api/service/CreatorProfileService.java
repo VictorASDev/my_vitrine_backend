@@ -26,14 +26,9 @@ public class CreatorProfileService {
         this.userService = userService;
     }
 
-    /**
-     * @param userId id do usuario autenticado (extraido do JWT pelo
-     *               Controller) — o perfil criado e sempre o do proprio
-     *               usuario, nunca de terceiros.
-     */
     @Transactional
-    public CreatorProfileResponse create(UUID userId, CreatorProfileRequest request) {
-        User user = userService.getUserOrThrow(userId);
+    public CreatorProfileResponse create(CreatorProfileRequest request) {
+        User user = userService.getUserOrThrow(request.userId());
         if (user.getProfileType() != ProfileType.CREATOR) {
             throw new BusinessRuleException("Usuario " + user.getId() + " nao possui profileType CREATOR");
         }
@@ -41,7 +36,6 @@ public class CreatorProfileService {
             throw new ResourceConflictException("Usuario " + user.getId() + " ja possui um perfil de criador");
         }
         CreatorProfile profile = new CreatorProfile(user, request.bio(), request.portfolioUrl());
-
         return CreatorProfileResponse.from(creatorProfileRepository.save(profile));
     }
 

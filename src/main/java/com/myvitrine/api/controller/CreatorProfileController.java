@@ -2,15 +2,12 @@ package com.myvitrine.api.controller;
 
 import com.myvitrine.api.dto.request.CreatorProfileRequest;
 import com.myvitrine.api.dto.response.CreatorProfileResponse;
-import com.myvitrine.api.security.CurrentUser;
 import com.myvitrine.api.service.CreatorProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,11 +32,9 @@ public class CreatorProfileController {
     }
 
     @PostMapping
-    @Operation(summary = "Cria o perfil de criador do usuario autenticado (requer ROLE_CREATOR)")
-    public ResponseEntity<CreatorProfileResponse> create(@Valid @RequestBody CreatorProfileRequest request,
-                                                         @AuthenticationPrincipal Jwt jwt) {
-        CreatorProfileResponse response = creatorProfileService.create(CurrentUser.id(jwt), request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @Operation(summary = "Cria o perfil de criador de um usuario existente")
+    public ResponseEntity<CreatorProfileResponse> create(@Valid @RequestBody CreatorProfileRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(creatorProfileService.create(request));
     }
 
     @GetMapping

@@ -37,13 +37,13 @@ class CreatorProfileServiceTest {
     void shouldCreateCreatorProfileWhenUserIsCreatorType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Bia", "bia@example.com", "hash", ProfileType.CREATOR, LocalDateTime.now());
-        CreatorProfileRequest request = new CreatorProfileRequest("bio", "http://portfolio.com");
+        CreatorProfileRequest request = new CreatorProfileRequest(userId, "bio", "http://portfolio.com");
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
         when(creatorProfileRepository.existsById(userId)).thenReturn(false);
         when(creatorProfileRepository.save(any(CreatorProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CreatorProfileResponse response = creatorProfileService.create(userId, request);
+        CreatorProfileResponse response = creatorProfileService.create(request);
 
         assertThat(response.portfolioUrl()).isEqualTo("http://portfolio.com");
     }
@@ -52,11 +52,11 @@ class CreatorProfileServiceTest {
     void shouldThrowBusinessRuleWhenUserIsNotCreatorType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Loja X", "loja@example.com", "hash", ProfileType.STORE, LocalDateTime.now());
-        CreatorProfileRequest request = new CreatorProfileRequest("bio", "http://portfolio.com");
+        CreatorProfileRequest request = new CreatorProfileRequest(userId, "bio", "http://portfolio.com");
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
 
-        assertThatThrownBy(() -> creatorProfileService.create(userId, request))
+        assertThatThrownBy(() -> creatorProfileService.create(request))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

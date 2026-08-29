@@ -24,7 +24,7 @@ public class CreatorProfile {
     @Column(name = "user_id")
     private UUID userId;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;
@@ -41,6 +41,7 @@ public class CreatorProfile {
 
     public CreatorProfile(User user, String bio, String portfolioUrl) {
         this.user = user;
+        this.userId = user.getId();
         this.bio = bio;
         this.portfolioUrl = portfolioUrl;
     }

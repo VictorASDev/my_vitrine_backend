@@ -41,6 +41,7 @@ public class StoreProfile {
 
     public StoreProfile(User user, String storeName, String description) {
         this.user = user;
+        this.userId = user.getId();
         this.storeName = storeName;
         this.description = description;
     }

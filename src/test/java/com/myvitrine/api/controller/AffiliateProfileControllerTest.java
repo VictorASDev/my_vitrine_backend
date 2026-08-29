@@ -1,6 +1,6 @@
 package com.myvitrine.api.controller;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.AffiliateProfileRequest;
 import com.myvitrine.api.dto.response.AffiliateProfileResponse;
 import com.myvitrine.api.exception.BusinessRuleException;
@@ -16,9 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,13 +36,12 @@ class AffiliateProfileControllerTest {
     @Test
     void shouldReturnCreatedWhenAffiliateProfileIsValid() throws Exception {
         UUID userId = UUID.randomUUID();
-        AffiliateProfileRequest request = new AffiliateProfileRequest("bio", "moda");
+        AffiliateProfileRequest request = new AffiliateProfileRequest(userId, "bio", "moda");
         AffiliateProfileResponse response = new AffiliateProfileResponse(userId, "bio", "moda");
 
-        when(affiliateProfileService.create(eq(userId), any(AffiliateProfileRequest.class))).thenReturn(response);
+        when(affiliateProfileService.create(any(AffiliateProfileRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/affiliate-profiles")
-                        .with(jwt().jwt(builder -> builder.subject(userId.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -52,13 +49,11 @@ class AffiliateProfileControllerTest {
 
     @Test
     void shouldReturnBadRequestWhenUserProfileTypeIsNotAffiliate() throws Exception {
-        UUID userId = UUID.randomUUID();
-        AffiliateProfileRequest request = new AffiliateProfileRequest("bio", "moda");
-        when(affiliateProfileService.create(eq(userId), any(AffiliateProfileRequest.class)))
+        AffiliateProfileRequest request = new AffiliateProfileRequest(UUID.randomUUID(), "bio", "moda");
+        when(affiliateProfileService.create(any(AffiliateProfileRequest.class)))
                 .thenThrow(new BusinessRuleException("Usuario nao possui profileType AFFILIATE"));
 
         mockMvc.perform(post("/api/affiliate-profiles")
-                        .with(jwt().jwt(builder -> builder.subject(userId.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());

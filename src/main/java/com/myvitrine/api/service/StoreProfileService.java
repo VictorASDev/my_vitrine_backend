@@ -26,14 +26,9 @@ public class StoreProfileService {
         this.userService = userService;
     }
 
-    /**
-     * @param userId id do usuario autenticado (extraido do JWT pelo
-     *               Controller) — o perfil criado e sempre o do proprio
-     *               usuario, nunca de terceiros.
-     */
     @Transactional
-    public StoreProfileResponse create(UUID userId, StoreProfileRequest request) {
-        User user = userService.getUserOrThrow(userId);
+    public StoreProfileResponse create(StoreProfileRequest request) {
+        User user = userService.getUserOrThrow(request.userId());
         if (user.getProfileType() != ProfileType.STORE) {
             throw new BusinessRuleException("Usuario " + user.getId() + " nao possui profileType STORE");
         }
