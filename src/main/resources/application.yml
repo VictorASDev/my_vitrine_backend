@@ -1,5 +1,5 @@
 cors:
-  originPatterns:${CORS_ORIGINS:http://localhost:5173}
+  originPatterns: ${CORS_ORIGINS:http://localhost:5173}
 
 spring:
   application:
@@ -7,7 +7,7 @@ spring:
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/myvitrine}
-    username: ${DB_USERNAME:postegres}
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:}
 
   jpa:
