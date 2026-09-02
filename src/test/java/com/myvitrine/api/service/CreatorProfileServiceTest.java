@@ -7,6 +7,7 @@ import com.myvitrine.api.model.CreatorProfile;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.model.enums.ProfileType;
 import com.myvitrine.api.repository.CreatorProfileRepository;
+import com.myvitrine.api.repository.SocialNetworkRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,33 +31,36 @@ class CreatorProfileServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private SocialNetworkRepository socialNetworkRepository;
+
     @InjectMocks
     private CreatorProfileService creatorProfileService;
 
     @Test
     void shouldCreateCreatorProfileWhenUserIsCreatorType() {
         UUID userId = UUID.randomUUID();
-        User user = new User(userId, "Bia", "bia@example.com", "hash", ProfileType.CREATOR, LocalDateTime.now());
-        CreatorProfileRequest request = new CreatorProfileRequest("bio", "http://portfolio.com");
+        User user = new User(userId, "Bia", "bia@example.com", "hash", null, LocalDateTime.now());
+        CreatorProfileRequest request = new CreatorProfileRequest(userId, "bio", "moda", null, "http://photo.com");
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
         when(creatorProfileRepository.existsById(userId)).thenReturn(false);
         when(creatorProfileRepository.save(any(CreatorProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CreatorProfileResponse response = creatorProfileService.create(userId, request);
+        CreatorProfileResponse response = creatorProfileService.create(request);
 
-        assertThat(response.portfolioUrl()).isEqualTo("http://portfolio.com");
+        assertThat(response.profilePhotoUrl()).isEqualTo("http://photo.com");
     }
 
     @Test
     void shouldThrowBusinessRuleWhenUserIsNotCreatorType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Loja X", "loja@example.com", "hash", ProfileType.STORE, LocalDateTime.now());
-        CreatorProfileRequest request = new CreatorProfileRequest("bio", "http://portfolio.com");
+        CreatorProfileRequest request = new CreatorProfileRequest(userId, "bio", "moda", null, "http://photo.com");
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
 
-        assertThatThrownBy(() -> creatorProfileService.create(userId, request))
+        assertThatThrownBy(() -> creatorProfileService.create(request))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

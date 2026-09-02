@@ -35,14 +35,27 @@ public class StoreProfile {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "niche")
+    private String niche;
+
+    @Column(name = "cnpj")
+    private String cnpj;
+
     protected StoreProfile() {
         // JPA
     }
 
-    public StoreProfile(User user, String storeName, String description) {
+    public StoreProfile(User user, String storeName, String description, String niche, String cnpj) {
+        this.userId = user.getId();
         this.user = user;
         this.storeName = storeName;
         this.description = description;
+        this.niche = niche;
+        this.cnpj = cnpj;
+    }
+
+    public StoreProfile(User user, String storeName, String description) {
+        this(user, storeName, description, null, null);
     }
 
     public UUID getUserId() {
@@ -67,6 +80,22 @@ public class StoreProfile {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getNiche() {
+        return niche;
+    }
+
+    public void setNiche(String niche) {
+        this.niche = niche;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
     }
 
     @Override

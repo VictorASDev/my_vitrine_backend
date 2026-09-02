@@ -84,7 +84,7 @@ erDiagram
     PERFIL_CRIADOR {
         uuid usuario_id PK
         string bio
-        string portfolio_url
+        string profile_photo_url
     }
     PRODUTO {
         uuid id PK
