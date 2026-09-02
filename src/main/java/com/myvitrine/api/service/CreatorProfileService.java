@@ -8,6 +8,7 @@ import com.myvitrine.api.exception.ResourceNotFoundException;
 import com.myvitrine.api.model.CreatorProfile;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.model.enums.ProfileType;
+import com.myvitrine.api.model.enums.RegistrationStatus;
 import com.myvitrine.api.repository.CreatorProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,22 +27,25 @@ public class CreatorProfileService {
         this.userService = userService;
     }
 
-    /**
-     * @param userId id do usuario autenticado (extraido do JWT pelo
-     *               Controller) — o perfil criado e sempre o do proprio
-     *               usuario, nunca de terceiros.
-     */
     @Transactional
-    public CreatorProfileResponse create(UUID userId, CreatorProfileRequest request) {
-        User user = userService.getUserOrThrow(userId);
-        if (user.getProfileType() != ProfileType.CREATOR) {
-            throw new BusinessRuleException("Usuario " + user.getId() + " nao possui profileType CREATOR");
+    public CreatorProfileResponse create(CreatorProfileRequest request) {
+        if (request.userId() == null) {
+            throw new BusinessRuleException("userId e obrigatorio para concluir o cadastro");
+        }
+        User user = userService.getUserOrThrow(request.userId());
+        if (user.getRegistrationStatus() != RegistrationStatus.INCOMPLETE) {
+            throw new BusinessRuleException("Cadastro do usuario " + user.getId() + " ja foi concluido");
+        }
+        if (user.getProfileType() != null) {
+            throw new BusinessRuleException("Usuario " + user.getId() + " ja possui um profileType definido");
         }
         if (creatorProfileRepository.existsById(user.getId())) {
             throw new ResourceConflictException("Usuario " + user.getId() + " ja possui um perfil de criador");
         }
         CreatorProfile profile = new CreatorProfile(user, request.bio(), request.portfolioUrl());
 
+        user.setProfileType(ProfileType.CREATOR);
+        user.setRegistrationStatus(RegistrationStatus.COMPLETE);
         return CreatorProfileResponse.from(creatorProfileRepository.save(profile));
     }
 

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record AffiliateProfileRequest(
+        UUID userId,
         String bio,
         String niche
 ) {

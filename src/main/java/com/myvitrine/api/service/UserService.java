@@ -10,10 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +31,7 @@ public class UserService {
             throw new ResourceConflictException("Ja existe um usuario cadastrado com o e-mail " + request.email());
         }
         User user = new User(UUID.randomUUID(), request.name(), request.email(),
-               passwordEncoder.encode(request.password()), request.profileType(), LocalDateTime.now());
+                passwordEncoder.encode(request.password()), null, LocalDateTime.now());
         return UserResponse.from(userRepository.save(user));
     }
 

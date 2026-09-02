@@ -83,6 +83,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/store-profiles").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/affiliate-profiles").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/creator-profiles").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("STORE")
                         .requestMatchers(HttpMethod.PUT, "/api/products/*").hasRole("STORE")
@@ -90,9 +93,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/products/*").hasRole("STORE")
                         .requestMatchers(HttpMethod.POST, "/api/affiliate-links").hasRole("AFFILIATE")
                         .requestMatchers(HttpMethod.POST, "/api/hirings").hasRole("STORE")
-                        .requestMatchers(HttpMethod.POST, "/api/store-profiles").hasRole("STORE")
-                        .requestMatchers(HttpMethod.POST, "/api/affiliate-profiles").hasRole("AFFILIATE")
-                        .requestMatchers(HttpMethod.POST, "/api/creator-profiles").hasRole("CREATOR")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt

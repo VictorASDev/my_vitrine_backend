@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record StoreProfileRequest(
+        UUID userId,
         @NotBlank String storeName,
         String description
 ) {

@@ -8,6 +8,7 @@ import com.myvitrine.api.exception.ResourceNotFoundException;
 import com.myvitrine.api.model.StoreProfile;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.model.enums.ProfileType;
+import com.myvitrine.api.model.enums.RegistrationStatus;
 import com.myvitrine.api.repository.StoreProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,21 +27,24 @@ public class StoreProfileService {
         this.userService = userService;
     }
 
-    /**
-     * @param userId id do usuario autenticado (extraido do JWT pelo
-     *               Controller) — o perfil criado e sempre o do proprio
-     *               usuario, nunca de terceiros.
-     */
     @Transactional
-    public StoreProfileResponse create(UUID userId, StoreProfileRequest request) {
-        User user = userService.getUserOrThrow(userId);
-        if (user.getProfileType() != ProfileType.STORE) {
-            throw new BusinessRuleException("Usuario " + user.getId() + " nao possui profileType STORE");
+    public StoreProfileResponse create(StoreProfileRequest request) {
+        if (request.userId() == null) {
+            throw new BusinessRuleException("userId e obrigatorio para concluir o cadastro");
+        }
+        User user = userService.getUserOrThrow(request.userId());
+        if (user.getRegistrationStatus() != RegistrationStatus.INCOMPLETE) {
+            throw new BusinessRuleException("Cadastro do usuario " + user.getId() + " ja foi concluido");
+        }
+        if (user.getProfileType() != null) {
+            throw new BusinessRuleException("Usuario " + user.getId() + " ja possui um profileType definido");
         }
         if (storeProfileRepository.existsById(user.getId())) {
             throw new ResourceConflictException("Usuario " + user.getId() + " ja possui um perfil de lojista");
         }
         StoreProfile profile = new StoreProfile(user, request.storeName(), request.description());
+        user.setProfileType(ProfileType.STORE);
+        user.setRegistrationStatus(RegistrationStatus.COMPLETE);
         return StoreProfileResponse.from(storeProfileRepository.save(profile));
     }
 

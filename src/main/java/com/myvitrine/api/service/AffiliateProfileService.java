@@ -8,6 +8,7 @@ import com.myvitrine.api.exception.ResourceNotFoundException;
 import com.myvitrine.api.model.AffiliateProfile;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.model.enums.ProfileType;
+import com.myvitrine.api.model.enums.RegistrationStatus;
 import com.myvitrine.api.repository.AffiliateProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,21 +27,24 @@ public class AffiliateProfileService {
         this.userService = userService;
     }
 
-    /**
-     * @param userId id do usuario autenticado (extraido do JWT pelo
-     *               Controller) — o perfil criado e sempre o do proprio
-     *               usuario, nunca de terceiros.
-     */
     @Transactional
-    public AffiliateProfileResponse create(UUID userId, AffiliateProfileRequest request) {
-        User user = userService.getUserOrThrow(userId);
-        if (user.getProfileType() != ProfileType.AFFILIATE) {
-            throw new BusinessRuleException("Usuario " + user.getId() + " nao possui profileType AFFILIATE");
+    public AffiliateProfileResponse create(AffiliateProfileRequest request) {
+        if (request.userId() == null) {
+            throw new BusinessRuleException("userId e obrigatorio para concluir o cadastro");
+        }
+        User user = userService.getUserOrThrow(request.userId());
+        if (user.getRegistrationStatus() != RegistrationStatus.INCOMPLETE) {
+            throw new BusinessRuleException("Cadastro do usuario " + user.getId() + " ja foi concluido");
+        }
+        if (user.getProfileType() != null) {
+            throw new BusinessRuleException("Usuario " + user.getId() + " ja possui um profileType definido");
         }
         if (affiliateProfileRepository.existsById(user.getId())) {
             throw new ResourceConflictException("Usuario " + user.getId() + " ja possui um perfil de afiliado");
         }
         AffiliateProfile profile = new AffiliateProfile(user, request.bio(), request.niche());
+        user.setProfileType(ProfileType.AFFILIATE);
+        user.setRegistrationStatus(RegistrationStatus.COMPLETE);
         return AffiliateProfileResponse.from(affiliateProfileRepository.save(profile));
     }
 

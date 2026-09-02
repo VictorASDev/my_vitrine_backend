@@ -35,10 +35,9 @@ public class AffiliateProfileController {
     }
 
     @PostMapping
-    @Operation(summary = "Cria o perfil de afiliado do usuario autenticado (requer ROLE_AFFILIATE)")
-    public ResponseEntity<AffiliateProfileResponse> create(@Valid @RequestBody AffiliateProfileRequest request,
-                                                           @AuthenticationPrincipal Jwt jwt) {
-        AffiliateProfileResponse response = affiliateProfileService.create(CurrentUser.id(jwt), request);
+    @Operation(summary = "Cria o perfil de afiliado e conclui o cadastro do usuario")
+    public ResponseEntity<AffiliateProfileResponse> create(@Valid @RequestBody AffiliateProfileRequest request) {
+        AffiliateProfileResponse response = affiliateProfileService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
