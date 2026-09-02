@@ -43,7 +43,6 @@ public class CreatorProfile {
     }
 
     public CreatorProfile(User user, String bio, String niche, String profilePhotoUrl) {
-        this.userId = user.getId();
         this.user = user;
         this.bio = bio;
         this.niche = niche;
