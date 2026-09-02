@@ -32,17 +32,25 @@ public class CreatorProfile {
     @Column(name = "bio")
     private String bio;
 
-    @Column(name = "portfolio_url")
-    private String portfolioUrl;
+    @Column(name = "niche")
+    private String niche;
+
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
 
     protected CreatorProfile() {
         // JPA
     }
 
-    public CreatorProfile(User user, String bio, String portfolioUrl) {
+    public CreatorProfile(User user, String bio, String niche, String profilePhotoUrl) {
         this.user = user;
         this.bio = bio;
-        this.portfolioUrl = portfolioUrl;
+        this.niche = niche;
+        this.profilePhotoUrl = profilePhotoUrl;
+    }
+
+    public CreatorProfile(User user, String bio, String profilePhotoUrl) {
+        this(user, bio, null, profilePhotoUrl);
     }
 
     public UUID getUserId() {
@@ -61,12 +69,20 @@ public class CreatorProfile {
         this.bio = bio;
     }
 
-    public String getPortfolioUrl() {
-        return portfolioUrl;
+    public String getNiche() {
+        return niche;
     }
 
-    public void setPortfolioUrl(String portfolioUrl) {
-        this.portfolioUrl = portfolioUrl;
+    public void setNiche(String niche) {
+        this.niche = niche;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 
     @Override

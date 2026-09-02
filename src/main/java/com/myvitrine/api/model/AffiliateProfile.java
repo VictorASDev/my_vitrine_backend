@@ -35,14 +35,22 @@ public class AffiliateProfile {
     @Column(name = "niche")
     private String niche;
 
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
+
     protected AffiliateProfile() {
         // JPA
     }
 
-    public AffiliateProfile(User user, String bio, String niche) {
+    public AffiliateProfile(User user, String bio, String niche, String profilePhotoUrl) {
         this.user = user;
         this.bio = bio;
         this.niche = niche;
+        this.profilePhotoUrl = profilePhotoUrl;
+    }
+
+    public AffiliateProfile(User user, String bio, String niche) {
+        this(user, bio, niche, null);
     }
 
     public UUID getUserId() {
@@ -67,6 +75,14 @@ public class AffiliateProfile {
 
     public void setNiche(String niche) {
         this.niche = niche;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 
     @Override

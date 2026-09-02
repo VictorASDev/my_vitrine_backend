@@ -8,6 +8,7 @@ import com.myvitrine.api.model.StoreProfile;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.model.enums.ProfileType;
 import com.myvitrine.api.repository.StoreProfileRepository;
+import com.myvitrine.api.repository.SocialNetworkRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,20 +32,23 @@ class StoreProfileServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private SocialNetworkRepository socialNetworkRepository;
+
     @InjectMocks
     private StoreProfileService storeProfileService;
 
     @Test
     void shouldCreateStoreProfileWhenUserIsStoreType() {
         UUID userId = UUID.randomUUID();
-        User user = new User(userId, "Loja X", "loja@example.com", "hash", ProfileType.STORE, LocalDateTime.now());
-        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Descricao");
+        User user = new User(userId, "Loja X", "loja@example.com", "hash", null, LocalDateTime.now());
+        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", "Descricao", "moda", "123", null);
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
         when(storeProfileRepository.existsById(userId)).thenReturn(false);
         when(storeProfileRepository.save(any(StoreProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StoreProfileResponse response = storeProfileService.create(userId, request);
+        StoreProfileResponse response = storeProfileService.create(request);
 
         assertThat(response.storeName()).isEqualTo("Loja X");
         assertThat(response.userId()).isEqualTo(userId);
@@ -54,24 +58,24 @@ class StoreProfileServiceTest {
     void shouldThrowBusinessRuleWhenUserIsNotStoreType() {
         UUID userId = UUID.randomUUID();
         User user = new User(userId, "Afiliado X", "afiliado@example.com", "hash", ProfileType.AFFILIATE, LocalDateTime.now());
-        StoreProfileRequest request = new StoreProfileRequest("Loja X", null);
+        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", null, null, null, null);
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
 
-        assertThatThrownBy(() -> storeProfileService.create(userId, request))
+        assertThatThrownBy(() -> storeProfileService.create(request))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
     @Test
     void shouldThrowConflictWhenStoreProfileAlreadyExists() {
         UUID userId = UUID.randomUUID();
-        User user = new User(userId, "Loja X", "loja@example.com", "hash", ProfileType.STORE, LocalDateTime.now());
-        StoreProfileRequest request = new StoreProfileRequest("Loja X", null);
+        User user = new User(userId, "Loja X", "loja@example.com", "hash", null, LocalDateTime.now());
+        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", null, null, null, null);
 
         when(userService.getUserOrThrow(userId)).thenReturn(user);
         when(storeProfileRepository.existsById(userId)).thenReturn(true);
 
-        assertThatThrownBy(() -> storeProfileService.create(userId, request))
+        assertThatThrownBy(() -> storeProfileService.create(request))
                 .isInstanceOf(ResourceConflictException.class);
     }
 }

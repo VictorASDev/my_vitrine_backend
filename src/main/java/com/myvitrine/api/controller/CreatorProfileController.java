@@ -35,10 +35,9 @@ public class CreatorProfileController {
     }
 
     @PostMapping
-    @Operation(summary = "Cria o perfil de criador do usuario autenticado (requer ROLE_CREATOR)")
-    public ResponseEntity<CreatorProfileResponse> create(@Valid @RequestBody CreatorProfileRequest request,
-                                                         @AuthenticationPrincipal Jwt jwt) {
-        CreatorProfileResponse response = creatorProfileService.create(CurrentUser.id(jwt), request);
+    @Operation(summary = "Cria o perfil de criador e conclui o cadastro do usuario")
+    public ResponseEntity<CreatorProfileResponse> create(@Valid @RequestBody CreatorProfileRequest request) {
+        CreatorProfileResponse response = creatorProfileService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

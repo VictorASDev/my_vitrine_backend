@@ -1,6 +1,7 @@
 package com.myvitrine.api.model;
 
 import com.myvitrine.api.model.enums.ProfileType;
+import com.myvitrine.api.model.enums.RegistrationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -37,6 +38,10 @@ public class User {
     @Column(name = "profile_type", nullable = false)
     private ProfileType profileType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "registration_status", nullable = false)
+    private RegistrationStatus registrationStatus;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -50,6 +55,7 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.profileType = profileType;
+        this.registrationStatus = profileType == null ? RegistrationStatus.INCOMPLETE : RegistrationStatus.COMPLETE;
         this.createdAt = createdAt;
     }
 
@@ -83,6 +89,26 @@ public class User {
 
     public ProfileType getProfileType() {
         return profileType;
+    }
+
+    public void setProfileType(ProfileType profileType) {
+        this.profileType = profileType;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public RegistrationStatus getRegistrationStatus() {
+        return registrationStatus;
+    }
+
+    public void setRegistrationStatus(RegistrationStatus registrationStatus) {
+        this.registrationStatus = registrationStatus;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public LocalDateTime getCreatedAt() {

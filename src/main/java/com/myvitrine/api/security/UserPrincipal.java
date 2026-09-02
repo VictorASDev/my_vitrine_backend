@@ -37,6 +37,9 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (user.getProfileType() == null) {
+            return List.of();
+        }
         return List.of(new SimpleGrantedAuthority("ROLE_" + user.getProfileType().name()));
     }
 

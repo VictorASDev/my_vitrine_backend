@@ -48,10 +48,10 @@ class StoreProfileControllerTest {
     @Test
     void shouldReturnCreatedWhenStoreProfileIsValid() throws Exception {
         UUID userId = UUID.randomUUID();
-        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Descricao");
-        StoreProfileResponse response = new StoreProfileResponse(userId, "Loja X", "Descricao");
+        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", "Descricao", "moda", "123", null);
+        StoreProfileResponse response = new StoreProfileResponse(userId, "Loja X", "Descricao", "moda", "123", null);
 
-        when(storeProfileService.create(eq(userId), any(StoreProfileRequest.class))).thenReturn(response);
+        when(storeProfileService.create(any(StoreProfileRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/store-profiles")
                         .with(jwt().jwt(builder -> builder.subject(userId.toString())))
@@ -73,7 +73,7 @@ class StoreProfileControllerTest {
 
     @Test
     void shouldReturnBadRequestWhenStoreNameIsBlank() throws Exception {
-        StoreProfileRequest request = new StoreProfileRequest("", null);
+        StoreProfileRequest request = new StoreProfileRequest(UUID.randomUUID(), "", null, null, null, null);
 
         mockMvc.perform(post("/api/store-profiles")
                         .with(jwt().jwt(builder -> builder.subject(UUID.randomUUID().toString())))
@@ -86,7 +86,7 @@ class StoreProfileControllerTest {
     void shouldReturnForbiddenWhenUpdatingSomeoneElsesProfile() throws Exception {
         UUID ownerId = UUID.randomUUID();
         UUID authenticatedId = UUID.randomUUID();
-        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Descricao");
+        StoreProfileRequest request = new StoreProfileRequest(ownerId, "Loja X", "Descricao", null, null, null);
 
         mockMvc.perform(put("/api/store-profiles/{userId}", ownerId)
                         .with(jwt().jwt(builder -> builder.subject(authenticatedId.toString())))
@@ -98,8 +98,8 @@ class StoreProfileControllerTest {
     @Test
     void shouldAllowUpdatingOwnProfile() throws Exception {
         UUID userId = UUID.randomUUID();
-        StoreProfileRequest request = new StoreProfileRequest("Loja X", "Nova descricao");
-        StoreProfileResponse response = new StoreProfileResponse(userId, "Loja X", "Nova descricao");
+        StoreProfileRequest request = new StoreProfileRequest(userId, "Loja X", "Nova descricao", null, null, null);
+        StoreProfileResponse response = new StoreProfileResponse(userId, "Loja X", "Nova descricao", null, null, null);
 
         when(storeProfileService.update(eq(userId), any(StoreProfileRequest.class))).thenReturn(response);
 

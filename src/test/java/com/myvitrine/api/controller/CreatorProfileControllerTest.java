@@ -37,10 +37,10 @@ class CreatorProfileControllerTest {
     @Test
     void shouldReturnCreatedWhenCreatorProfileIsValid() throws Exception {
         UUID userId = UUID.randomUUID();
-        CreatorProfileRequest request = new CreatorProfileRequest("bio", "http://portfolio.com");
-        CreatorProfileResponse response = new CreatorProfileResponse(userId, "bio", "http://portfolio.com");
+        CreatorProfileRequest request = new CreatorProfileRequest(userId, "bio", "moda", null, "http://photo.com");
+        CreatorProfileResponse response = new CreatorProfileResponse(userId, "bio", "moda", null, "http://photo.com");
 
-        when(creatorProfileService.create(eq(userId), org.mockito.ArgumentMatchers.any(CreatorProfileRequest.class)))
+        when(creatorProfileService.create(org.mockito.ArgumentMatchers.any(CreatorProfileRequest.class)))
                 .thenReturn(response);
 
         mockMvc.perform(post("/api/creator-profiles")
@@ -48,6 +48,6 @@ class CreatorProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.portfolioUrl").value("http://portfolio.com"));
+                .andExpect(jsonPath("$.profilePhotoUrl").value("http://photo.com"));
     }
 }

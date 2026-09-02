@@ -34,10 +34,9 @@ public class StoreProfileController {
         this.storeProfileService = storeProfileService;
     }
     @PostMapping
-    @Operation(summary = "Cria o perfil de lojista do usuario autenticado (requer ROLE_STORE)")
-    public ResponseEntity<StoreProfileResponse> create(@Valid @RequestBody StoreProfileRequest request,
-                                                       @AuthenticationPrincipal Jwt jwt) {
-        StoreProfileResponse response = storeProfileService.create(CurrentUser.id(jwt), request);
+    @Operation(summary = "Cria o perfil de lojista e conclui o cadastro do usuario")
+    public ResponseEntity<StoreProfileResponse> create(@Valid @RequestBody StoreProfileRequest request) {
+        StoreProfileResponse response = storeProfileService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
