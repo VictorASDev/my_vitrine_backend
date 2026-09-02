@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -78,6 +79,7 @@ public class SecurityConfig {
                 // API stateless com JWT em Authorization: Bearer — sem sessao, sem CSRF token classico.
                 // O unico endpoint autenticado por cookie (refresh/logout) usa SameSite=Strict, que ja
                 // impede o navegador de enviar o cookie em requisicoes cross-site (mitigacao de CSRF).
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth

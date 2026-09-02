@@ -1,3 +1,6 @@
+cors:
+  originPatterns:${CORS_ORIGINS:http://localhost:5173}
+
 spring:
   application:
     name: myvitrine-api
