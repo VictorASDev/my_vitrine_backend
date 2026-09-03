@@ -85,6 +85,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/store-profiles").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/affiliate-profiles").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/creator-profiles").permitAll()
