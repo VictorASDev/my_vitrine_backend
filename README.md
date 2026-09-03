@@ -10,6 +10,7 @@ A plataforma permite que lojistas cadastrem produtos, que afiliados gerem links 
 - [Modelo de dados](#modelo-de-dados)
 - [Tecnologias](#tecnologias)
 - [Como rodar](#como-rodar)
+- [Como rodar com Docker](#como-rodar-com-docker)
 - [Executar os testes](#executar-os-testes)
 - [Documentação da API](#documentação-da-api)
 
@@ -148,7 +149,52 @@ erDiagram
 - Springdoc OpenAPI
 - JUnit 5 e Mockito
 
-> A implementação de autenticação e autorização não faz parte do escopo atual.
+## Como rodar com Docker
+
+### Pré-requisitos
+
+- Docker Engine
+- Docker Compose
+
+Na raiz do projeto, execute:
+
+```bash
+docker compose up --build
+```
+
+A API ficará disponível em `http://localhost:8080`. Para executar em segundo plano:
+
+```bash
+docker compose up --build -d
+```
+
+Para interromper os containers:
+
+```bash
+docker compose down
+```
+
+Os dados do PostgreSQL são mantidos no volume `postgres_data`. Para removê-los junto com os containers:
+
+```bash
+docker compose down -v
+```
+
+### Variáveis do Docker Compose
+
+Crie um arquivo `.env` na raiz caso precise alterar os valores padrão:
+
+```dotenv
+POSTGRES_DB=myvitrine
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=123456
+POSTGRES_PORT=5432
+API_PORT=8080
+CORS_ORIGINS=http://localhost:5173
+JWT_COOKIE_SECURE=false
+```
+
+Em produção, use uma senha forte, mantenha `JWT_COOKIE_SECURE=true` quando a API estiver atrás de HTTPS e configure chaves RSA persistentes em `JWT_PRIVATE_KEY` e `JWT_PUBLIC_KEY`. Sem essas chaves, a aplicação gera um par temporário apenas para desenvolvimento.
 
 ## Como rodar
 
@@ -166,15 +212,15 @@ Crie o banco:
 CREATE DATABASE myvitrine;
 ```
 
-Configure as credenciais no `application.properties`:
+Configure as credenciais por variáveis de ambiente ou no `application.yml`:
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/myvitrine
-spring.datasource.username=postgres
-spring.datasource.password=postgres
-
-spring.jpa.hibernate.ddl-auto=validate
+```bash
+DB_URL=jdbc:postgresql://localhost:5432/myvitrine
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
 ```
+
+O Hibernate usa `ddl-auto=validate`; a estrutura do banco é criada e atualizada exclusivamente pelas migrations do Flyway.
 
 ### Executar a aplicação
 
@@ -195,8 +241,10 @@ As migrations do Flyway são executadas automaticamente ao iniciar a aplicação
 ## Executar os testes
 
 ```bash
-./mvnw test
+./mvnw.cmd test
 ```
+
+No Linux/macOS, use `./mvnw test`.
 
 ## Documentação da API
 
