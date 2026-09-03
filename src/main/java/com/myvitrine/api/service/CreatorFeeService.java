@@ -8,6 +8,8 @@ import com.myvitrine.api.model.Hiring;
 import com.myvitrine.api.model.enums.HiringStatus;
 import com.myvitrine.api.model.enums.PaymentStatus;
 import com.myvitrine.api.repository.CreatorFeeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,9 +54,17 @@ public class CreatorFeeService {
         return creatorFeeRepository.findAll().stream().map(CreatorFeeResponse::from).toList();
     }
 
+    public Page<CreatorFeeResponse> findAll(Pageable pageable) {
+        return creatorFeeRepository.findAll(pageable).map(CreatorFeeResponse::from);
+    }
+
     public List<CreatorFeeResponse> findByCreator(UUID creatorId) {
         return creatorFeeRepository.findByHiringCreatorUserId(creatorId).stream()
                 .map(CreatorFeeResponse::from).toList();
+    }
+
+    public Page<CreatorFeeResponse> findByCreator(UUID creatorId, Pageable pageable) {
+        return creatorFeeRepository.findByHiringCreatorUserId(creatorId, pageable).map(CreatorFeeResponse::from);
     }
 
     /**

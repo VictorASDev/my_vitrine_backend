@@ -1,18 +1,21 @@
 package com.myvitrine.api.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.myvitrine.api.dto.request.ProductRequest;
 import com.myvitrine.api.dto.response.ProductResponse;
 import com.myvitrine.api.exception.ResourceNotFoundException;
 import com.myvitrine.api.model.Product;
 import com.myvitrine.api.model.StoreProfile;
 import com.myvitrine.api.repository.ProductRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ProductService {
@@ -47,8 +50,16 @@ public class ProductService {
         return productRepository.findAll().stream().map(ProductResponse::from).toList();
     }
 
+    public Page<ProductResponse> findAll(Pageable pageable) {
+        return productRepository.findAll(pageable).map(ProductResponse::from);
+    }
+
     public List<ProductResponse> findByStore(UUID storeId) {
         return productRepository.findByStoreUserId(storeId).stream().map(ProductResponse::from).toList();
+    }
+
+    public Page<ProductResponse> findByStore(UUID storeId, Pageable pageable) {
+        return productRepository.findByStoreUserId(storeId, pageable).map(ProductResponse::from);
     }
 
     @Transactional

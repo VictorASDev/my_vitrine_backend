@@ -10,6 +10,8 @@ import com.myvitrine.api.model.Product;
 import com.myvitrine.api.model.StoreProfile;
 import com.myvitrine.api.model.enums.HiringStatus;
 import com.myvitrine.api.repository.HiringRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,12 +84,24 @@ public class HiringService {
         return hiringRepository.findAll().stream().map(HiringResponse::from).toList();
     }
 
+    public Page<HiringResponse> findAll(Pageable pageable) {
+        return hiringRepository.findAll(pageable).map(HiringResponse::from);
+    }
+
     public List<HiringResponse> findByStore(UUID storeId) {
         return hiringRepository.findByStoreUserId(storeId).stream().map(HiringResponse::from).toList();
     }
 
+    public Page<HiringResponse> findByStore(UUID storeId, Pageable pageable) {
+        return hiringRepository.findByStoreUserId(storeId, pageable).map(HiringResponse::from);
+    }
+
     public List<HiringResponse> findByCreator(UUID creatorId) {
         return hiringRepository.findByCreatorUserId(creatorId).stream().map(HiringResponse::from).toList();
+    }
+
+    public Page<HiringResponse> findByCreator(UUID creatorId, Pageable pageable) {
+        return hiringRepository.findByCreatorUserId(creatorId, pageable).map(HiringResponse::from);
     }
 
     /**

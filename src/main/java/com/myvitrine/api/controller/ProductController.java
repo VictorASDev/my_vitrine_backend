@@ -6,6 +6,9 @@ import com.myvitrine.api.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -40,12 +42,13 @@ public class ProductController {
     }
 
     @GetMapping
-    @Operation(summary = "Lista produtos, opcionalmente filtrando por lojista")
-    public ResponseEntity<List<ProductResponse>> findAll(@RequestParam(required = false) UUID storeId) {
+    @Operation(summary = "Lista produtos paginados, opcionalmente filtrando por lojista")
+    public ResponseEntity<Page<ProductResponse>> findAll(@RequestParam(required = false) UUID storeId,
+                                                         @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         if (storeId != null) {
-            return ResponseEntity.ok(productService.findByStore(storeId));
+            return ResponseEntity.ok(productService.findByStore(storeId, pageable));
         }
-        return ResponseEntity.ok(productService.findAll());
+        return ResponseEntity.ok(productService.findAll(pageable));
     }
 
     @GetMapping("/{id}")

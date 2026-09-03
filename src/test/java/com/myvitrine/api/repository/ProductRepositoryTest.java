@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,6 +46,27 @@ class ProductRepositoryTest {
         assertThat(products).hasSize(1);
         assertThat(products.get(0).getName()).isEqualTo("Camiseta");
     }
+
+        @Test
+        void shouldFindProductsByStoreIdWithPagination() {
+                User storeUser = new User(UUID.randomUUID(), "Loja Y", "lojay@example.com", "hash",
+                                ProfileType.STORE, LocalDateTime.now());
+                entityManager.persist(storeUser);
+                StoreProfile store = new StoreProfile(storeUser, "Loja Y", null);
+                entityManager.persist(store);
+
+                for (int index = 0; index < 2; index++) {
+                        entityManager.persist(new Product(UUID.randomUUID(), store, "Produto " + index,
+                                        new BigDecimal("50.00"), new BigDecimal("10.00"), null, true, LocalDateTime.now()));
+                }
+                entityManager.flush();
+
+                Page<Product> products = productRepository.findByStoreUserId(store.getUserId(), PageRequest.of(1, 1));
+
+                assertThat(products.getContent()).hasSize(1);
+                assertThat(products.getTotalElements()).isEqualTo(2);
+                assertThat(products.getTotalPages()).isEqualTo(2);
+        }
 
     @Test
     void shouldFindOnlyActiveProducts() {
