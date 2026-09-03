@@ -31,7 +31,7 @@ public class UserService {
             throw new ResourceConflictException("Ja existe um usuario cadastrado com o e-mail " + request.email());
         }
         User user = new User(UUID.randomUUID(), request.name(), request.email(),
-                passwordEncoder.encode(request.password()), request.profileType(), LocalDateTime.now());
+                passwordEncoder.encode(request.password()), null, LocalDateTime.now());
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -52,7 +52,6 @@ public class UserService {
         user.setName(request.name());
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setProfileType(request.profileType());
         return UserResponse.from(user);
     }
 
