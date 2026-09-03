@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -39,16 +41,17 @@ public class HiringController {
     }
 
     @GetMapping
-    @Operation(summary = "Lista contratacoes, opcionalmente filtrando por lojista ou criador")
-    public ResponseEntity<List<HiringResponse>> findAll(@RequestParam(required = false) UUID storeId,
-                                                          @RequestParam(required = false) UUID creatorId) {
+    @Operation(summary = "Lista contratacoes paginadas, opcionalmente filtrando por lojista ou criador")
+    public ResponseEntity<Page<HiringResponse>> findAll(@RequestParam(required = false) UUID storeId,
+                                                        @RequestParam(required = false) UUID creatorId,
+                                                        @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         if (storeId != null) {
-            return ResponseEntity.ok(hiringService.findByStore(storeId));
+            return ResponseEntity.ok(hiringService.findByStore(storeId, pageable));
         }
         if (creatorId != null) {
-            return ResponseEntity.ok(hiringService.findByCreator(creatorId));
+            return ResponseEntity.ok(hiringService.findByCreator(creatorId, pageable));
         }
-        return ResponseEntity.ok(hiringService.findAll());
+        return ResponseEntity.ok(hiringService.findAll(pageable));
     }
 
     @GetMapping("/{id}")

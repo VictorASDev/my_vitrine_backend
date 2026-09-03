@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -84,6 +86,20 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnPaginatedUsers() throws Exception {
+        UserResponse response = new UserResponse(UUID.randomUUID(), "Ana Lima", "ana@example.com",
+                null, RegistrationStatus.INCOMPLETE, LocalDateTime.now());
+        when(userService.findAll(any())).thenReturn(new PageImpl<>(
+                java.util.List.of(response), PageRequest.of(1, 1), 2));
+
+        mockMvc.perform(get("/api/users").param("page", "1").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].email").value("ana@example.com"))
+                .andExpect(jsonPath("$.number").value(1))
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test

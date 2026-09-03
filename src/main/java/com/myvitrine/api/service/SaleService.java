@@ -6,6 +6,8 @@ import com.myvitrine.api.exception.ResourceNotFoundException;
 import com.myvitrine.api.model.AffiliateLink;
 import com.myvitrine.api.model.Sale;
 import com.myvitrine.api.repository.SaleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,8 +52,16 @@ public class SaleService {
         return saleRepository.findAll().stream().map(SaleResponse::from).toList();
     }
 
+    public Page<SaleResponse> findAll(Pageable pageable) {
+        return saleRepository.findAll(pageable).map(SaleResponse::from);
+    }
+
     public List<SaleResponse> findByAffiliateLink(UUID affiliateLinkId) {
         return saleRepository.findByAffiliateLinkId(affiliateLinkId).stream().map(SaleResponse::from).toList();
+    }
+
+    public Page<SaleResponse> findByAffiliateLink(UUID affiliateLinkId, Pageable pageable) {
+        return saleRepository.findByAffiliateLinkId(affiliateLinkId, pageable).map(SaleResponse::from);
     }
 
     Sale getSaleOrThrow(UUID id) {

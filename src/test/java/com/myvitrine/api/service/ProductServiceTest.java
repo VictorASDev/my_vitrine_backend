@@ -1,5 +1,24 @@
 package com.myvitrine.api.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import com.myvitrine.api.dto.request.ProductRequest;
 import com.myvitrine.api.dto.response.ProductResponse;
 import com.myvitrine.api.exception.ResourceNotFoundException;
@@ -8,23 +27,6 @@ import com.myvitrine.api.model.StoreProfile;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.model.enums.ProfileType;
 import com.myvitrine.api.repository.ProductRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -79,6 +81,21 @@ class ProductServiceTest {
 
         assertThatThrownBy(() -> productService.findById(id))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void shouldReturnPaginatedProducts() {
+        Pageable pageable = PageRequest.of(1, 1);
+        Product product = new Product(UUID.randomUUID(), storeProfile(), "Camiseta", new BigDecimal("50.00"),
+                new BigDecimal("10.00"), null, true, LocalDateTime.now());
+        when(productRepository.findAll(pageable)).thenReturn(new PageImpl<>(java.util.List.of(product), pageable, 2));
+
+        var page = productService.findAll(pageable);
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent().get(0).name()).isEqualTo("Camiseta");
+        verify(productRepository).findAll(pageable);
     }
 
     @Test

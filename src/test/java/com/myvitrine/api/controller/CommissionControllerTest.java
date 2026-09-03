@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -15,7 +17,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,4 +54,17 @@ class CommissionControllerTest {
         mockMvc.perform(patch("/api/commissions/{id}/confirm", id))
                 .andExpect(status().isBadRequest());
     }
+
+            @Test
+            void shouldReturnPaginatedCommissions() throws Exception {
+            CommissionResponse response = new CommissionResponse(UUID.randomUUID(), UUID.randomUUID(),
+                new BigDecimal("20.00"), new BigDecimal("4.00"), PaymentStatus.PENDING);
+            when(commissionService.findAll(any())).thenReturn(new PageImpl<>(
+                java.util.List.of(response), PageRequest.of(0, 1), 1));
+
+            mockMvc.perform(get("/api/commissions").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+            }
 }
