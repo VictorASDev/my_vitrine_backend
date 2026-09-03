@@ -6,11 +6,10 @@ import com.myvitrine.api.security.CurrentUser;
 import com.myvitrine.api.service.AffiliateProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,13 +55,16 @@ public class AffiliateProfileController {
     @PutMapping("/{userId}")
     @Operation(summary = "Atualiza um perfil de afiliado")
     public ResponseEntity<AffiliateProfileResponse> update(@PathVariable UUID userId,
-                                                             @Valid @RequestBody AffiliateProfileRequest request) {
+                                                             @Valid @RequestBody AffiliateProfileRequest request,
+                                                             HttpServletRequest httpRequest) {
+        CurrentUser.requireOwner(httpRequest, userId);
         return ResponseEntity.ok(affiliateProfileService.update(userId, request));
     }
 
     @DeleteMapping("/{userId}")
     @Operation(summary = "Remove um perfil de afiliado")
-    public ResponseEntity<Void> delete(@PathVariable UUID userId) {
+    public ResponseEntity<Void> delete(@PathVariable UUID userId, HttpServletRequest httpRequest) {
+        CurrentUser.requireOwner(httpRequest, userId);
         affiliateProfileService.delete(userId);
         return ResponseEntity.noContent().build();
     }

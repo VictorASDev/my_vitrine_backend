@@ -10,8 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -61,16 +60,16 @@ public class UserController {
     @Operation(summary = "Atualiza os dados de um usuario")
     @ApiResponse(responseCode = "403", description = "Tentativa de editar outro usuario")
     public ResponseEntity<UserResponse> update(@PathVariable UUID id, @Valid @RequestBody UserRequest request,
-                                               @AuthenticationPrincipal Jwt jwt) {
-        CurrentUser.requireOwner(jwt, id);
+                                               HttpServletRequest httpRequest) {
+        CurrentUser.requireOwner(httpRequest, id);
         return ResponseEntity.ok(userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remove um usuario")
     @ApiResponse(responseCode = "403", description = "Tentativa de remover outro usuario")
-    public ResponseEntity<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
-        CurrentUser.requireOwner(jwt, id);
+    public ResponseEntity<Void> delete(@PathVariable UUID id, HttpServletRequest httpRequest) {
+        CurrentUser.requireOwner(httpRequest, id);
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }

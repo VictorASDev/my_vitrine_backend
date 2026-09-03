@@ -46,6 +46,7 @@ public class StoreProfile {
     }
 
     public StoreProfile(User user, String storeName, String description, String niche, String cnpj) {
+        this.userId = user.getId();
         this.user = user;
         this.storeName = storeName;
         this.description = description;

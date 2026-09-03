@@ -9,8 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,13 +54,16 @@ public class StoreProfileController {
     @PutMapping("/{userId}")
     @Operation(summary = "Atualiza um perfil de lojista")
     public ResponseEntity<StoreProfileResponse> update(@PathVariable UUID userId,
-                                                         @Valid @RequestBody StoreProfileRequest request) {
+                                                         @Valid @RequestBody StoreProfileRequest request,
+                                                         HttpServletRequest httpRequest) {
+        CurrentUser.requireOwner(httpRequest, userId);
         return ResponseEntity.ok(storeProfileService.update(userId, request));
     }
 
     @DeleteMapping("/{userId}")
     @Operation(summary = "Remove um perfil de lojista")
-    public ResponseEntity<Void> delete(@PathVariable UUID userId) {
+    public ResponseEntity<Void> delete(@PathVariable UUID userId, HttpServletRequest httpRequest) {
+        CurrentUser.requireOwner(httpRequest, userId);
         storeProfileService.delete(userId);
         return ResponseEntity.noContent().build();
     }

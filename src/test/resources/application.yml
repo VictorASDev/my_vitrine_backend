@@ -9,6 +9,7 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    database-platform: com.myvitrine.api.config.TestH2Dialect
 
   flyway:
     enabled: true
