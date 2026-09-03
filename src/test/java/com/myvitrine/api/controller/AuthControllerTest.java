@@ -1,5 +1,6 @@
 package com.myvitrine.api.controller;
 
+import com.myvitrine.api.model.enums.RegistrationStatus;
 import tools.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.LoginRequest;
 import com.myvitrine.api.dto.response.LoginResponse;
@@ -11,8 +12,8 @@ import com.myvitrine.api.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -42,7 +43,7 @@ class AuthControllerTest {
     private AuthService authService;
 
     private UserResponse someUserResponse() {
-        return new UserResponse(UUID.randomUUID(), "Ana Lima", "ana@example.com", ProfileType.STORE, LocalDateTime.now());
+        return new UserResponse(UUID.randomUUID(), "Ana Lima", "ana@example.com", ProfileType.STORE, RegistrationStatus.INCOMPLETE, LocalDateTime.now());
     }
 
     @Test

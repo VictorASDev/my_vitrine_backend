@@ -8,5 +8,5 @@ src/main/resources/.env
 README.md
 HELP.md
 Dockerfile
-compose.yml
+docker-compose.yml
 docker-compose.yml

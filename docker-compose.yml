@@ -18,7 +18,9 @@ services:
       retries: 10
 
   api:
-    image: ${DOCKERHUB_USERNAME}/myvitrine-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: myvitrine-api
     restart: unless-stopped
     depends_on:
@@ -28,6 +30,7 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-myvitrine}
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY:-}
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
       JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE:-false}

@@ -1,5 +1,6 @@
 package com.myvitrine.api.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.myvitrine.api.dto.request.LoginRequest;
 import com.myvitrine.api.dto.response.LoginResponse;
 import com.myvitrine.api.exception.InvalidTokenException;
@@ -72,8 +73,8 @@ class AuthServiceTest {
     private Jwt refreshJwt(UUID tokenId) {
         return Jwt.withTokenValue("token-value")
                 .header("alg", "RS256")
+                .claim("jti", tokenId.toString())
                 .claim("token_type", "refresh")
-                .id(tokenId.toString())
                 .subject(UUID.randomUUID().toString())
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(60))

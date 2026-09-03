@@ -42,7 +42,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        request = new UserRequest("Ana Lima", "ana@example.com", "senha1234", ProfileType.STORE);
+        request = new UserRequest("Ana Lima", "ana@example.com", "senha1234");
     }
 
     @Test
