@@ -5,6 +5,8 @@ cors:
   originPatterns: ${CORS_ORIGINS}
 
 spring:
+  application:
+    name: myvitrine-api-PROD
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
