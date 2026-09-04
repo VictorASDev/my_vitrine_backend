@@ -1,12 +1,13 @@
 package com.myvitrine.api.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.myvitrine.api.dto.request.LoginRequest;
 import com.myvitrine.api.dto.response.LoginResponse;
+import com.myvitrine.api.exception.ConflictException;
 import com.myvitrine.api.exception.InvalidTokenException;
 import com.myvitrine.api.model.RefreshToken;
 import com.myvitrine.api.model.User;
 import com.myvitrine.api.model.enums.ProfileType;
+import com.myvitrine.api.model.enums.RegistrationStatus;
 import com.myvitrine.api.repository.RefreshTokenRepository;
 import com.myvitrine.api.security.GeneratedRefreshToken;
 import com.myvitrine.api.security.JwtProperties;
@@ -57,13 +58,17 @@ class AuthServiceTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
+    @Mock
+    private UserService userService;
+
     private AuthService authService;
     private JwtProperties jwtProperties;
 
     @BeforeEach
     void setUp() {
         jwtProperties = new JwtProperties("myvitrine-api-test", Duration.ofMinutes(15), Duration.ofDays(7), null, null, false);
-        authService = new AuthService(authenticationManager, jwtService, refreshTokenRepository, jwtProperties);
+        authService = new AuthService(authenticationManager, jwtService, refreshTokenRepository, jwtProperties,
+            userService);
     }
 
     private User someUser() {
@@ -88,6 +93,7 @@ class AuthServiceTest {
         Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         HttpServletResponse response = mock(HttpServletResponse.class);
 
+        when(userService.findByUserByEmail("ana@example.com")).thenReturn(user);
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(jwtService.generateAccessToken(user)).thenReturn("access-token-value");
         when(jwtService.generateRefreshToken(user)).thenReturn(
@@ -107,11 +113,27 @@ class AuthServiceTest {
 
     @Test
     void shouldPropagateAuthenticationExceptionOnBadCredentials() {
+        User user = someUser();
         HttpServletResponse response = mock(HttpServletResponse.class);
+        when(userService.findByUserByEmail("ana@example.com")).thenReturn(user);
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("Credenciais invalidas"));
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("ana@example.com", "errada"), response))
                 .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void shouldRejectLoginWhenRegistrationIsIncomplete() {
+        User user = someUser();
+        user.setRegistrationStatus(RegistrationStatus.INCOMPLETE);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(userService.findByUserByEmail("ana@example.com")).thenReturn(user);
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("ana@example.com", "senha1234"), response))
+                .isInstanceOf(ConflictException.class);
+
+        verify(authenticationManager, never()).authenticate(any());
     }
 
     @Test

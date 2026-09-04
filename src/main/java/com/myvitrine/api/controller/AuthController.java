@@ -2,6 +2,7 @@ package com.myvitrine.api.controller;
 
 import com.myvitrine.api.dto.request.LoginRequest;
 import com.myvitrine.api.dto.response.LoginResponse;
+import com.myvitrine.api.exception.ConflictException;
 import com.myvitrine.api.security.AuthConstants;
 import com.myvitrine.api.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +31,8 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Autentica com e-mail/senha; retorna o access token no corpo e o refresh token em cookie httpOnly")
     @ApiResponse(responseCode = "401", description = "E-mail ou senha invalidos")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request,
+                                               HttpServletResponse response) {
         return ResponseEntity.ok(authService.login(request, response));
     }
 

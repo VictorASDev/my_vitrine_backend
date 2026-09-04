@@ -59,6 +59,14 @@ public class UserController {
         return ResponseEntity.ok(userService.findById(id));
     }
 
+    @GetMapping("/email/{email}")
+    @Operation(summary = "Busca um usuario pelo e-mail")
+    @ApiResponse(responseCode = "200", description = "Usuario encontrado")
+    @ApiResponse(responseCode = "404", description = "Usuario nao encontrado")
+    public ResponseEntity<UserResponse> findByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(userService.findByEmail(email));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Atualiza os dados de um usuario")
     @ApiResponse(responseCode = "403", description = "Tentativa de editar outro usuario")

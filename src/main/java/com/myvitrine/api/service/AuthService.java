@@ -3,9 +3,11 @@ package com.myvitrine.api.service;
 import com.myvitrine.api.dto.request.LoginRequest;
 import com.myvitrine.api.dto.response.LoginResponse;
 import com.myvitrine.api.dto.response.UserResponse;
+import com.myvitrine.api.exception.ConflictException;
 import com.myvitrine.api.exception.InvalidTokenException;
 import com.myvitrine.api.model.RefreshToken;
 import com.myvitrine.api.model.User;
+import com.myvitrine.api.model.enums.RegistrationStatus;
 import com.myvitrine.api.repository.RefreshTokenRepository;
 import com.myvitrine.api.security.GeneratedRefreshToken;
 import com.myvitrine.api.security.JwtProperties;
@@ -39,20 +41,39 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
+    private final UserService userService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtService jwtService,
-                        RefreshTokenRepository refreshTokenRepository, JwtProperties jwtProperties) {
+                        RefreshTokenRepository refreshTokenRepository,
+                       JwtProperties jwtProperties, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtProperties = jwtProperties;
+        this.userService = userService;
     }
 
     @Transactional
-    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
+    public LoginResponse login(LoginRequest request, HttpServletResponse response)
+            throws ConflictException {
+
+        User user = userService.findByUserByEmail(request.email());
+
+        if (user.getRegistrationStatus() == RegistrationStatus.INCOMPLETE) {
+            throw new ConflictException(
+                    "Cadastro incompleto. Conclua seu cadastro antes de realizar o login."
+            );
+        }
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password()));
-        User user = ((UserPrincipal) authentication.getPrincipal()).getUser();
+                new UsernamePasswordAuthenticationToken(
+                        request.email(),
+                        request.password()
+                )
+        );
+
+        user = ((UserPrincipal) authentication.getPrincipal()).getUser();
+
         return issueTokens(user, response);
     }
 

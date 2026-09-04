@@ -41,6 +41,18 @@ public class UserService {
         return UserResponse.from(getUserOrThrow(id));
     }
 
+    public UserResponse findByEmail(String email) {
+        return UserResponse.from(
+                userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado: " + email))
+        );
+    }
+
+    public User findByUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado: " + email));
+    }
+
     public List<UserResponse> findAll() {
         return userRepository.findAll().stream().map(UserResponse::from).toList();
     }

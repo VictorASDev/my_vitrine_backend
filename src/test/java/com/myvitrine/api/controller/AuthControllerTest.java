@@ -5,6 +5,7 @@ import tools.jackson.databind.ObjectMapper;
 import com.myvitrine.api.dto.request.LoginRequest;
 import com.myvitrine.api.dto.response.LoginResponse;
 import com.myvitrine.api.dto.response.UserResponse;
+import com.myvitrine.api.exception.ConflictException;
 import com.myvitrine.api.exception.InvalidTokenException;
 import com.myvitrine.api.model.enums.ProfileType;
 import com.myvitrine.api.security.AuthConstants;
@@ -43,7 +44,7 @@ class AuthControllerTest {
     private AuthService authService;
 
     private UserResponse someUserResponse() {
-        return new UserResponse(UUID.randomUUID(), "Ana Lima", "ana@example.com", ProfileType.STORE, RegistrationStatus.INCOMPLETE, LocalDateTime.now());
+        return new UserResponse(UUID.randomUUID(), "Ana Lima", "ana@example.com", ProfileType.STORE, RegistrationStatus.COMPLETE, LocalDateTime.now());
     }
 
     @Test
@@ -70,6 +71,18 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+            @Test
+            void shouldReturnConflictWhenRegistrationIsIncomplete() throws Exception {
+            LoginRequest request = new LoginRequest("ana@example.com", "senha1234");
+            when(authService.login(any(LoginRequest.class), any()))
+                .thenThrow(new ConflictException("Cadastro incompleto"));
+
+            mockMvc.perform(post("/api/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+            }
 
     @Test
     void shouldRefreshUsingCookie() throws Exception {

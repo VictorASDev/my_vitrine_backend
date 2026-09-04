@@ -89,6 +89,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/store-profiles").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/affiliate-profiles").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/creator-profiles").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/email/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("STORE")
                         .requestMatchers(HttpMethod.PUT, "/api/products/*").hasRole("STORE")

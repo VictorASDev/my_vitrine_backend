@@ -51,6 +51,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> conflictException(
+            ConflictException ex,
+            HttpServletRequest request) {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     /**
      * Cobre falhas de login (ex.: BadCredentialsException) lancadas por
      * AuthenticationManager.authenticate(...) dentro de AuthService — um
