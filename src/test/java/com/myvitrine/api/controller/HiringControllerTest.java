@@ -1,36 +1,36 @@
 package com.myvitrine.api.controller;
 
-import tools.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.myvitrine.api.dto.request.HiringRequest;
 import com.myvitrine.api.dto.request.HiringStatusUpdateRequest;
 import com.myvitrine.api.dto.response.HiringResponse;
 import com.myvitrine.api.exception.BusinessRuleException;
 import com.myvitrine.api.model.enums.HiringStatus;
 import com.myvitrine.api.service.HiringService;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(HiringController.class)
-@AutoConfigureMockMvc(addFilters = false)
 class HiringControllerTest {
 
     @Autowired
@@ -54,6 +54,8 @@ class HiringControllerTest {
         when(hiringService.create(any(HiringRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/hirings")
+                        .with(jwt().jwt(builder -> builder.subject(storeId.toString())
+                                .claim("profileType", "STORE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -63,11 +65,18 @@ class HiringControllerTest {
     @Test
     void shouldReturnBadRequestWhenStatusTransitionIsInvalid() throws Exception {
         UUID id = UUID.randomUUID();
+        UUID creatorId = UUID.randomUUID();
         HiringStatusUpdateRequest request = new HiringStatusUpdateRequest(HiringStatus.APPROVED);
+        HiringResponse current = new HiringResponse(id, UUID.randomUUID(), "Loja X", creatorId, UUID.randomUUID(),
+                "Camiseta", HiringStatus.REQUESTED, LocalDateTime.now());
+
+        when(hiringService.findById(eq(id))).thenReturn(current);
         when(hiringService.updateStatus(eq(id), eq(HiringStatus.APPROVED)))
                 .thenThrow(new BusinessRuleException("Transicao de status invalida"));
 
         mockMvc.perform(patch("/api/hirings/{id}/status", id)
+                        .with(jwt().jwt(builder -> builder.subject(creatorId.toString())
+                                .claim("profileType", "CREATOR")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -80,7 +89,9 @@ class HiringControllerTest {
         when(hiringService.findAll(any())).thenReturn(new PageImpl<>(
                 java.util.List.of(response), PageRequest.of(0, 1), 1));
 
-        mockMvc.perform(get("/api/hirings").param("page", "0").param("size", "1"))
+        mockMvc.perform(get("/api/hirings").param("page", "0").param("size", "1")
+                        .with(jwt().jwt(builder -> builder.subject(UUID.randomUUID().toString())
+                                .claim("profileType", "STORE"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].status").value("REQUESTED"))
                 .andExpect(jsonPath("$.totalElements").value(1));

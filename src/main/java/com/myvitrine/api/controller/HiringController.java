@@ -1,21 +1,13 @@
 package com.myvitrine.api.controller;
 
-import com.myvitrine.api.dto.request.FindTotalHiringsRequest;
-import com.myvitrine.api.dto.request.HiringRequest;
-import com.myvitrine.api.dto.request.HiringStatusUpdateRequest;
-import com.myvitrine.api.dto.response.CreatorDashboardResponse;
-import com.myvitrine.api.dto.response.FindTotalHiringsResponse;
-import com.myvitrine.api.dto.response.HiringResponse;
-import com.myvitrine.api.service.HiringService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import java.util.Objects;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -28,8 +20,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Objects;
-import java.util.UUID;
+import com.myvitrine.api.dto.request.HiringRequest;
+import com.myvitrine.api.dto.request.HiringStatusUpdateRequest;
+import com.myvitrine.api.dto.response.FindTotalHiringsResponse;
+import com.myvitrine.api.dto.response.HiringResponse;
+import com.myvitrine.api.service.HiringService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/hirings")
@@ -100,9 +99,12 @@ public class HiringController {
     @Operation(summary = "Busca uma contratacao pelo id, somente para o criador dono")
     public ResponseEntity<HiringResponse> findById(@PathVariable UUID id,
                                                  @AuthenticationPrincipal Jwt jwt) {
-        UUID creatorId = UUID.fromString(Objects.requireNonNull(jwt.getSubject()));
+        if (jwt == null || jwt.getSubject() == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Token de autenticacao ausente");
+        }
+        UUID creatorId = UUID.fromString(jwt.getSubject());
         HiringResponse response = hiringService.findById(id);
-        if (!response.creatorId().equals(creatorId)) {
+        if (!Objects.equals(response.creatorId(), creatorId)) {
             throw new org.springframework.security.access.AccessDeniedException("Voce so pode acessar suas proprias contratacoes");
         }
         return ResponseEntity.ok(response);
@@ -115,9 +117,15 @@ public class HiringController {
     public ResponseEntity<HiringResponse> updateStatus(@PathVariable UUID id,
                                                          @Valid @RequestBody HiringStatusUpdateRequest request,
                                                          @AuthenticationPrincipal Jwt jwt) {
-        UUID creatorId = UUID.fromString(Objects.requireNonNull(jwt.getSubject()));
+        if (jwt == null || jwt.getSubject() == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Token de autenticacao ausente");
+        }
+        if (request == null || request.status() == null) {
+            throw new com.myvitrine.api.exception.BusinessRuleException("Status e obrigatorio");
+        }
+        UUID creatorId = UUID.fromString(jwt.getSubject());
         HiringResponse current = hiringService.findById(id);
-        if (!current.creatorId().equals(creatorId)) {
+        if (current == null || !Objects.equals(current.creatorId(), creatorId)) {
             throw new org.springframework.security.access.AccessDeniedException("Voce so pode atualizar suas proprias contratacoes");
         }
         return ResponseEntity.ok(hiringService.updateStatus(id, request.status()));

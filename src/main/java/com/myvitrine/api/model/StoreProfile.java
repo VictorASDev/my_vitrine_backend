@@ -1,5 +1,8 @@
 package com.myvitrine.api.model;
 
+import java.util.Objects;
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -8,9 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
-import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Perfil complementar de um usuario do tipo STORE.
@@ -47,6 +47,7 @@ public class StoreProfile {
 
     public StoreProfile(User user, String storeName, String description, String niche, String cnpj) {
         this.user = user;
+        this.userId = user != null ? user.getId() : null;
         this.storeName = storeName;
         this.description = description;
         this.niche = niche;

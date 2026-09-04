@@ -1,5 +1,8 @@
 package com.myvitrine.api.model;
 
+import java.util.Objects;
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -8,9 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
-import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Perfil complementar de um usuario do tipo AFFILIATE.
@@ -44,6 +44,7 @@ public class AffiliateProfile {
 
     public AffiliateProfile(User user, String bio, String niche, String profilePhotoUrl) {
         this.user = user;
+        this.userId = user != null ? user.getId() : null;
         this.bio = bio;
         this.niche = niche;
         this.profilePhotoUrl = profilePhotoUrl;
