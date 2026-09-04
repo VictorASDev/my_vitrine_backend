@@ -44,7 +44,6 @@ public class CreatorProfile {
 
     public CreatorProfile(User user, String bio, String niche, String profilePhotoUrl) {
         this.user = user;
-        this.userId = user != null ? user.getId() : null;
         this.bio = bio;
         this.niche = niche;
         this.profilePhotoUrl = profilePhotoUrl;
