@@ -20,7 +20,7 @@ public final class RefreshTokenCookieFactory {
         return ResponseCookie.from(AuthConstants.REFRESH_TOKEN_COOKIE_NAME, token)
                 .httpOnly(true)
                 .secure(secure)
-                .sameSite("Strict")
+                .sameSite("None")
                 .path(AuthConstants.REFRESH_TOKEN_COOKIE_PATH)
                 .maxAge(maxAge)
                 .build();
