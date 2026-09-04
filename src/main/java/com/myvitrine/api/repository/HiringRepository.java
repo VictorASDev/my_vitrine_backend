@@ -13,10 +13,19 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface HiringRepository extends JpaRepository<Hiring, UUID> {
+
+    @EntityGraph(attributePaths = {
+            "store",
+            "creator",
+            "product"
+    })
+    @Override
+    Optional<Hiring> findById(UUID id);
 
     @EntityGraph(attributePaths = {
             "store",
