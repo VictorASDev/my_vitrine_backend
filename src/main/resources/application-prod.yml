@@ -1,5 +1,8 @@
 springdoc:
-  enabled: false
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
 cors:
   originPatterns: ${CORS_ORIGINS}
