@@ -1,6 +1,8 @@
 package com.myvitrine.api.service;
 
+import com.myvitrine.api.dto.projection.HiringStatusCountProjection;
 import com.myvitrine.api.dto.request.HiringRequest;
+import com.myvitrine.api.dto.response.FindTotalHiringsResponse;
 import com.myvitrine.api.dto.response.HiringResponse;
 import com.myvitrine.api.exception.BusinessRuleException;
 import com.myvitrine.api.exception.ResourceNotFoundException;
@@ -17,12 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class HiringService {
@@ -102,6 +100,23 @@ public class HiringService {
 
     public Page<HiringResponse> findByCreator(UUID creatorId, Pageable pageable) {
         return hiringRepository.findByCreatorUserId(creatorId, pageable).map(HiringResponse::from);
+    }
+
+
+    public FindTotalHiringsResponse findTotalByCreator(UUID creatorId) {
+        List<HiringStatusCountProjection> results =
+                hiringRepository.countByCreatorIdGroupedByStatus(creatorId);
+
+        Map<HiringStatus, Long> totals = results.stream()
+                .collect(Collectors.toMap(
+                        HiringStatusCountProjection::getStatus,
+                        HiringStatusCountProjection::getTotal
+                ));
+
+        Arrays.stream(HiringStatus.values())
+                .forEach(status -> totals.putIfAbsent(status, 0L));
+
+        return new FindTotalHiringsResponse(totals);
     }
 
     /**
