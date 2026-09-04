@@ -1,0 +1,18 @@
+springdoc:
+  enabled: false
+
+cors:
+  originPatterns: ${CORS_ORIGINS}
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+myvitrine:
+  security:
+    jwt:
+      private-key: ${JWT_PRIVATE_KEY}
+      public-key: ${JWT_PUBLIC_KEY}
+      cookie-secure: true
