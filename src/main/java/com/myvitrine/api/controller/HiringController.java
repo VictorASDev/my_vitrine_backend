@@ -3,6 +3,7 @@ package com.myvitrine.api.controller;
 import com.myvitrine.api.dto.request.FindTotalHiringsRequest;
 import com.myvitrine.api.dto.request.HiringRequest;
 import com.myvitrine.api.dto.request.HiringStatusUpdateRequest;
+import com.myvitrine.api.dto.response.CreatorDashboardResponse;
 import com.myvitrine.api.dto.response.FindTotalHiringsResponse;
 import com.myvitrine.api.dto.response.HiringResponse;
 import com.myvitrine.api.service.HiringService;
@@ -62,6 +63,25 @@ public class HiringController {
     }
 
     @PreAuthorize("hasRole('CREATOR')")
+    @GetMapping("/me")
+    @Operation(summary = "Lista as contratacoes do criador autenticado")
+    public ResponseEntity<Page<HiringResponse>> findMyHirings(
+            @AuthenticationPrincipal Jwt jwt,
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+        UUID creatorId = UUID.fromString(Objects.requireNonNull(jwt.getSubject()));
+        return ResponseEntity.ok(hiringService.findByCreator(creatorId, pageable));
+    }
+
+    @PreAuthorize("hasRole('CREATOR')")
+    @GetMapping("/me/dashboard")
+    @Operation(summary = "Resumo do dashboard do criador autenticado")
+    public ResponseEntity<com.myvitrine.api.dto.response.CreatorDashboardResponse> findMyDashboard(
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID creatorId = UUID.fromString(Objects.requireNonNull(jwt.getSubject()));
+        return ResponseEntity.ok(hiringService.getCreatorDashboard(creatorId));
+    }
+
+    @PreAuthorize("hasRole('CREATOR')")
     @GetMapping("/total")
     public ResponseEntity<FindTotalHiringsResponse> findTotalByCreator(
             @AuthenticationPrincipal Jwt jwt
@@ -75,19 +95,31 @@ public class HiringController {
         );
     }
 
-
-
+    @PreAuthorize("hasRole('CREATOR')")
     @GetMapping("/{id}")
-    @Operation(summary = "Busca uma contratacao pelo id")
-    public ResponseEntity<HiringResponse> findById(@PathVariable UUID id) {
-        return ResponseEntity.ok(hiringService.findById(id));
+    @Operation(summary = "Busca uma contratacao pelo id, somente para o criador dono")
+    public ResponseEntity<HiringResponse> findById(@PathVariable UUID id,
+                                                 @AuthenticationPrincipal Jwt jwt) {
+        UUID creatorId = UUID.fromString(Objects.requireNonNull(jwt.getSubject()));
+        HiringResponse response = hiringService.findById(id);
+        if (!response.creatorId().equals(creatorId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Voce so pode acessar suas proprias contratacoes");
+        }
+        return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('CREATOR')")
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Avanca o status da contratacao (REQUESTED -> ACCEPTED -> IN_PRODUCTION -> DELIVERED -> APPROVED)")
+    @Operation(summary = "Avanca o status da contratacao do criador autenticado")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Transicao de status invalida")
     public ResponseEntity<HiringResponse> updateStatus(@PathVariable UUID id,
-                                                         @Valid @RequestBody HiringStatusUpdateRequest request) {
+                                                         @Valid @RequestBody HiringStatusUpdateRequest request,
+                                                         @AuthenticationPrincipal Jwt jwt) {
+        UUID creatorId = UUID.fromString(Objects.requireNonNull(jwt.getSubject()));
+        HiringResponse current = hiringService.findById(id);
+        if (!current.creatorId().equals(creatorId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Voce so pode atualizar suas proprias contratacoes");
+        }
         return ResponseEntity.ok(hiringService.updateStatus(id, request.status()));
     }
 }

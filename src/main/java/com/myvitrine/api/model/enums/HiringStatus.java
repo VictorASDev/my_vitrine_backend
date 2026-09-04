@@ -7,6 +7,7 @@ package com.myvitrine.api.model.enums;
  */
 public enum HiringStatus {
     REQUESTED,
+    REJECTED,
     ACCEPTED,
     IN_PRODUCTION,
     DELIVERED,
