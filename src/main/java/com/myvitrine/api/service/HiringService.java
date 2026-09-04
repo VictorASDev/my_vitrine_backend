@@ -2,6 +2,8 @@ package com.myvitrine.api.service;
 
 import com.myvitrine.api.dto.projection.HiringStatusCountProjection;
 import com.myvitrine.api.dto.request.HiringRequest;
+import com.myvitrine.api.dto.response.CreatorDashboardResponse;
+import com.myvitrine.api.dto.response.CreatorFeeResponse;
 import com.myvitrine.api.dto.response.FindTotalHiringsResponse;
 import com.myvitrine.api.dto.response.HiringResponse;
 import com.myvitrine.api.exception.BusinessRuleException;
@@ -30,7 +32,8 @@ public class HiringService {
 
     /** Transicoes de status validas: REQUESTED -> ACCEPTED -> IN_PRODUCTION -> DELIVERED -> APPROVED. */
     private static final Map<HiringStatus, Set<HiringStatus>> VALID_TRANSITIONS = new EnumMap<>(Map.of(
-            HiringStatus.REQUESTED, EnumSet.of(HiringStatus.ACCEPTED),
+            HiringStatus.REQUESTED, EnumSet.of(HiringStatus.REJECTED, HiringStatus.ACCEPTED),
+            HiringStatus.REJECTED, EnumSet.noneOf(HiringStatus.class),
             HiringStatus.ACCEPTED, EnumSet.of(HiringStatus.IN_PRODUCTION),
             HiringStatus.IN_PRODUCTION, EnumSet.of(HiringStatus.DELIVERED),
             HiringStatus.DELIVERED, EnumSet.of(HiringStatus.APPROVED),
@@ -102,6 +105,49 @@ public class HiringService {
         return hiringRepository.findByCreatorUserId(creatorId, pageable).map(HiringResponse::from);
     }
 
+    public CreatorDashboardResponse getCreatorDashboard(UUID creatorId) {
+        List<Hiring> hirings = hiringRepository.findByCreatorUserId(creatorId);
+        List<CreatorFeeResponse> creatorFees = creatorFeeService.findByCreator(creatorId);
+
+        List<HiringResponse> recentJobs = hirings.stream()
+                .sorted(Comparator.comparing(Hiring::getCreatedAt).reversed())
+                .limit(5)
+                .map(HiringResponse::from)
+                .toList();
+
+        long totalJobs = hirings.size();
+        long pendingProposals = hirings.stream().filter(h -> h.getStatus() == HiringStatus.REQUESTED).count();
+        long activeJobs = hirings.stream()
+                .filter(h -> h.getStatus() == HiringStatus.REQUESTED
+                        || h.getStatus() == HiringStatus.ACCEPTED
+                        || h.getStatus() == HiringStatus.IN_PRODUCTION
+                        || h.getStatus() == HiringStatus.DELIVERED)
+                .count();
+        long completedJobs = hirings.stream().filter(h -> h.getStatus() == HiringStatus.APPROVED).count();
+
+        BigDecimal totalFees = creatorFees.stream()
+                .map(CreatorFeeResponse::amount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal pendingFees = creatorFees.stream()
+                .filter(f -> f.status() == com.myvitrine.api.model.enums.PaymentStatus.PENDING)
+                .map(CreatorFeeResponse::amount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal approvedFees = creatorFees.stream()
+                .filter(f -> f.status() == com.myvitrine.api.model.enums.PaymentStatus.CONFIRMED)
+                .map(CreatorFeeResponse::amount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new CreatorDashboardResponse(
+                totalJobs,
+                pendingProposals,
+                activeJobs,
+                completedJobs,
+                totalFees,
+                pendingFees,
+                approvedFees,
+                recentJobs
+        );
+    }
 
     public FindTotalHiringsResponse findTotalByCreator(UUID creatorId) {
         List<HiringStatusCountProjection> results =

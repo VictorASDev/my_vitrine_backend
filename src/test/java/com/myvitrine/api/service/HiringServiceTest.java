@@ -1,6 +1,24 @@
 package com.myvitrine.api.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.myvitrine.api.dto.request.HiringRequest;
+import com.myvitrine.api.dto.response.CreatorDashboardResponse;
 import com.myvitrine.api.dto.response.CreatorFeeResponse;
 import com.myvitrine.api.dto.response.HiringResponse;
 import com.myvitrine.api.exception.BusinessRuleException;
@@ -13,23 +31,6 @@ import com.myvitrine.api.model.enums.HiringStatus;
 import com.myvitrine.api.model.enums.PaymentStatus;
 import com.myvitrine.api.model.enums.ProfileType;
 import com.myvitrine.api.repository.HiringRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HiringServiceTest {
@@ -103,6 +104,17 @@ class HiringServiceTest {
     }
 
     @Test
+    void shouldAllowExplicitRejectionOfRequestedHiring() {
+        UUID id = UUID.randomUUID();
+        Hiring hiring = new Hiring(id, storeProfile(), creatorProfile(), product(), HiringStatus.REQUESTED, LocalDateTime.now());
+        when(hiringRepository.findById(id)).thenReturn(Optional.of(hiring));
+
+        HiringResponse response = hiringService.updateStatus(id, HiringStatus.REJECTED);
+
+        assertThat(response.status()).isEqualTo(HiringStatus.REJECTED);
+    }
+
+    @Test
     void shouldRejectInvalidStatusTransition() {
         UUID id = UUID.randomUUID();
         Hiring hiring = new Hiring(id, storeProfile(), creatorProfile(), product(), HiringStatus.REQUESTED, LocalDateTime.now());
@@ -110,6 +122,24 @@ class HiringServiceTest {
 
         assertThatThrownBy(() -> hiringService.updateStatus(id, HiringStatus.APPROVED))
                 .isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    void shouldReturnCreatorDashboardSummary() {
+        UUID creatorId = UUID.randomUUID();
+        CreatorProfile creator = creatorProfile();
+        Hiring requested = new Hiring(UUID.randomUUID(), storeProfile(), creator, product(), HiringStatus.REQUESTED, LocalDateTime.now());
+        Hiring accepted = new Hiring(UUID.randomUUID(), storeProfile(), creator, product(), HiringStatus.ACCEPTED, LocalDateTime.now());
+        Hiring approved = new Hiring(UUID.randomUUID(), storeProfile(), creator, product(), HiringStatus.APPROVED, LocalDateTime.now());
+
+        when(hiringRepository.findByCreatorUserId(creatorId)).thenReturn(java.util.List.of(requested, accepted, approved));
+
+        CreatorDashboardResponse response = hiringService.getCreatorDashboard(creatorId);
+
+        assertThat(response.totalJobs()).isEqualTo(3);
+        assertThat(response.pendingProposals()).isEqualTo(1);
+        assertThat(response.activeJobs()).isEqualTo(2);
+        assertThat(response.completedJobs()).isEqualTo(1);
     }
 
     @Test
