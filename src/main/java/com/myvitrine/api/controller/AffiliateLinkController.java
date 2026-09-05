@@ -2,10 +2,14 @@ package com.myvitrine.api.controller;
 
 import com.myvitrine.api.dto.request.AffiliateLinkRequest;
 import com.myvitrine.api.dto.response.AffiliateLinkResponse;
+import com.myvitrine.api.dto.response.AffiliateDashboardResponse;
+import com.myvitrine.api.security.CurrentUser;
 import com.myvitrine.api.service.AffiliateLinkService;
+import com.myvitrine.api.service.DashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,9 +30,11 @@ import java.util.UUID;
 public class AffiliateLinkController {
 
     private final AffiliateLinkService affiliateLinkService;
+    private final DashboardService dashboardService;
 
-    public AffiliateLinkController(AffiliateLinkService affiliateLinkService) {
+    public AffiliateLinkController(AffiliateLinkService affiliateLinkService, DashboardService dashboardService) {
         this.affiliateLinkService = affiliateLinkService;
+        this.dashboardService = dashboardService;
     }
 
     @PostMapping
@@ -45,6 +51,12 @@ public class AffiliateLinkController {
             return ResponseEntity.ok(affiliateLinkService.findByAffiliate(affiliateId));
         }
         return ResponseEntity.ok(affiliateLinkService.findAll());
+    }
+
+    @GetMapping("/me/dashboard")
+    @Operation(summary = "Exibe o resumo do dashboard do afiliado autenticado")
+    public ResponseEntity<AffiliateDashboardResponse> findMyDashboard(HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(dashboardService.getAffiliateDashboard(CurrentUser.id(httpRequest)));
     }
 
     @GetMapping("/{id}")

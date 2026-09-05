@@ -1,11 +1,13 @@
 package com.myvitrine.api.security;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,8 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-
-import java.util.List;
 
 /**
  * Fio condutor da camada de autorizacao: API stateless autenticada por
@@ -92,10 +92,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users/email/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("STORE")
+                        .requestMatchers(HttpMethod.GET, "/api/products/me").hasRole("STORE")
+                        .requestMatchers(HttpMethod.GET, "/api/products/me/dashboard").hasRole("STORE")
                         .requestMatchers(HttpMethod.PUT, "/api/products/*").hasRole("STORE")
                         .requestMatchers(HttpMethod.PATCH, "/api/products/*/deactivate").hasRole("STORE")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/*").hasRole("STORE")
                         .requestMatchers(HttpMethod.POST, "/api/affiliate-links").hasRole("AFFILIATE")
+                        .requestMatchers(HttpMethod.GET, "/api/affiliate-links/me/dashboard").hasRole("AFFILIATE")
                         .requestMatchers(HttpMethod.POST, "/api/hirings").hasRole("STORE")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

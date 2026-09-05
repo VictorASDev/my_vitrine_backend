@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.myvitrine.api.dto.request.ProductRequest;
 import com.myvitrine.api.dto.response.ProductResponse;
+import com.myvitrine.api.exception.BusinessRuleException;
 import com.myvitrine.api.exception.ResourceNotFoundException;
 import com.myvitrine.api.model.Product;
 import com.myvitrine.api.model.StoreProfile;
@@ -42,6 +43,14 @@ public class ProductService {
         return ProductResponse.from(productRepository.save(product));
     }
 
+    @Transactional
+    public ProductResponse createForStore(ProductRequest request, UUID storeId) {
+        if (!storeId.equals(request.storeId())) {
+            throw new BusinessRuleException("O produto deve pertencer ao lojista autenticado");
+        }
+        return create(request);
+    }
+
     public ProductResponse findById(UUID id) {
         return ProductResponse.from(getProductOrThrow(id));
     }
@@ -62,9 +71,28 @@ public class ProductService {
         return productRepository.findByStoreUserId(storeId, pageable).map(ProductResponse::from);
     }
 
+    public Page<ProductResponse> findOwned(UUID storeId, Pageable pageable) {
+        return findByStore(storeId, pageable);
+    }
+
     @Transactional
     public ProductResponse update(UUID id, ProductRequest request) {
         Product product = getProductOrThrow(id);
+        product.setName(request.name());
+        product.setPrice(request.price());
+        if (request.commissionPercentage() != null) {
+            product.setCommissionPercentage(request.commissionPercentage());
+        }
+        product.setImageUrl(request.imageUrl());
+        return ProductResponse.from(product);
+    }
+
+    @Transactional
+    public ProductResponse updateOwned(UUID id, ProductRequest request, UUID storeId) {
+        Product product = getOwnedProductOrThrow(id, storeId);
+        if (!storeId.equals(request.storeId())) {
+            throw new BusinessRuleException("O produto deve pertencer ao lojista autenticado");
+        }
         product.setName(request.name());
         product.setPrice(request.price());
         if (request.commissionPercentage() != null) {
@@ -81,9 +109,28 @@ public class ProductService {
     }
 
     @Transactional
+    public void deactivateOwned(UUID id, UUID storeId) {
+        getOwnedProductOrThrow(id, storeId).setActive(false);
+    }
+
+    @Transactional
     public void delete(UUID id) {
         Product product = getProductOrThrow(id);
         productRepository.delete(product);
+    }
+
+    @Transactional
+    public void deleteOwned(UUID id, UUID storeId) {
+        productRepository.delete(getOwnedProductOrThrow(id, storeId));
+    }
+
+    private Product getOwnedProductOrThrow(UUID id, UUID storeId) {
+        Product product = getProductOrThrow(id);
+        if (!storeId.equals(product.getStore().getUserId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Voce so pode gerenciar seus proprios produtos");
+        }
+        return product;
     }
 
     Product getProductOrThrow(UUID id) {

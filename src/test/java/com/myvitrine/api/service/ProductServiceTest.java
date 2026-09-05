@@ -110,4 +110,16 @@ class ProductServiceTest {
 
         assertThat(product.isActive()).isFalse();
     }
+
+    @Test
+    void shouldRejectMutationOfAnotherStoresProduct() {
+        UUID productId = UUID.randomUUID();
+        UUID authenticatedStoreId = UUID.randomUUID();
+        Product product = new Product(productId, storeProfile(), "Camiseta", new BigDecimal("50.00"),
+                new BigDecimal("10.00"), null, true, LocalDateTime.now());
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> productService.deactivateOwned(productId, authenticatedStoreId))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
 }
