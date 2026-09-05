@@ -11,6 +11,9 @@ A plataforma permite que lojistas cadastrem produtos, que afiliados gerem links 
 - [Tecnologias](#tecnologias)
 - [Como rodar](#como-rodar)
 - [Como rodar com Docker](#como-rodar-com-docker)
+- [Configuração e perfis](#configuração-e-perfis)
+- [Autenticação](#autenticação)
+- [Endpoints principais](#endpoints-principais)
 - [Executar os testes](#executar-os-testes)
 - [Documentação da API](#documentação-da-api)
 
@@ -238,16 +241,102 @@ mvnw.cmd spring-boot:run
 
 As migrations do Flyway são executadas automaticamente ao iniciar a aplicação.
 
-## Executar os testes
+## Configuração e perfis
+
+O perfil padrão é adequado para desenvolvimento local. As propriedades podem ser
+definidas por variáveis de ambiente ou sobrescritas em `application.yml`.
+
+| Variável | Padrão local | Descrição |
+|---|---|---|
+| `DB_URL` | `jdbc:postgresql://localhost:5432/myvitrine` | URL JDBC do PostgreSQL. |
+| `DB_USERNAME` | `postgres` | Usuário do banco. |
+| `DB_PASSWORD` | vazio | Senha do banco. |
+| `CORS_ORIGINS` | `http://localhost:5173` | Origens permitidas pelo CORS. |
+| `JWT_PRIVATE_KEY` | vazio | Chave privada RSA usada para assinar access tokens. |
+| `JWT_PUBLIC_KEY` | vazio | Chave pública RSA usada para validar access tokens. |
+| `JWT_COOKIE_SECURE` | `false` | Define se o cookie de refresh exige HTTPS. |
+
+Para produção, ative o perfil e forneça todas as configurações obrigatórias:
 
 ```bash
+SPRING_PROFILES_ACTIVE=prod
+DB_URL=jdbc:postgresql://<host>:5432/myvitrine
+DB_USERNAME=<usuario>
+DB_PASSWORD=<senha>
+CORS_ORIGINS=https://<frontend>
+JWT_PRIVATE_KEY=<chave-privada-rsa>
+JWT_PUBLIC_KEY=<chave-publica-rsa>
+```
+
+No perfil `prod`, a documentação OpenAPI fica desabilitada e o cookie de refresh
+é configurado para funcionar somente com HTTPS. Não versione chaves ou senhas.
+
+## Autenticação
+
+1. Faça `POST /api/users` para criar um usuário.
+2. Faça `POST /api/auth/login` com e-mail e senha. A resposta contém o access token;
+    o refresh token é enviado em um cookie `httpOnly`.
+3. Envie o access token nas requisições protegidas:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+4. Quando o access token expirar, faça `POST /api/auth/refresh` incluindo o cookie
+    de refresh. O token é rotacionado.
+5. Para encerrar a sessão, faça `POST /api/auth/logout`.
+
+As permissões são derivadas do tipo de perfil (`STORE`, `AFFILIATE` ou `CREATOR`).
+O refresh token não deve ser enviado no header `Authorization`.
+
+## Endpoints principais
+
+Todos os endpoints usam o prefixo `/api`:
+
+| Grupo | Prefixo | Finalidade |
+|---|---|---|
+| Autenticação | `/auth` | Login, renovação e logout. |
+| Usuários | `/users` | Cadastro e gerenciamento de usuários. |
+| Perfil de lojista | `/store-profiles` | Cadastro e gerenciamento do perfil da loja. |
+| Perfil de afiliado | `/affiliate-profiles` | Cadastro e gerenciamento do perfil de afiliado. |
+| Perfil de criador | `/creator-profiles` | Cadastro e gerenciamento do perfil de criador. |
+| Produtos | `/products` | Catálogo, produtos próprios e dashboard do lojista. |
+| Links de afiliado | `/affiliate-links` | Criação e consulta de links/cupons de divulgação. |
+| Vendas | `/sales` | Registro e consulta de vendas. |
+| Comissões | `/commissions` | Consulta de comissões geradas. |
+| Contratações | `/hirings` | Contratação de criadores e dashboards relacionados. |
+| Cachês | `/creator-fees` | Consulta dos cachês de criadores. |
+
+As listagens paginadas aceitam os parâmetros `page`, `size` e `sort`. Por exemplo:
+
+```text
+GET /api/products?page=0&size=20&sort=createdAt,desc
+```
+
+## Executar os testes
+
+Linux/macOS:
+
+```bash
+./mvnw test
+```
+
+Windows:
+
+```powershell
 ./mvnw.cmd test
 ```
 
-No Linux/macOS, use `./mvnw test`.
+Os testes usam H2 quando necessário e não exigem um PostgreSQL externo, salvo se
+algum teste específico for configurado para isso.
 
 ## Documentação da API
 
-A API utiliza OpenAPI/Swagger para documentação dos endpoints.
+A API utiliza OpenAPI/Swagger para documentar os endpoints e seus modelos.
 
-Após iniciar a aplicação, a documentação pode ser acessada pela interface do Swagger configurada pelo Springdoc, normalmente em `http://localhost:8080/swagger-ui.html`.
+Com a aplicação no perfil padrão, acesse:
+
+- Interface Swagger: `http://localhost:8080/swagger-ui.html`
+- Especificação OpenAPI: `http://localhost:8080/v3/api-docs`
+
+Essas rotas são públicas no perfil padrão e ficam desabilitadas em `prod`.
